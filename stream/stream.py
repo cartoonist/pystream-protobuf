@@ -41,12 +41,21 @@ from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 class Stream(object):
     """Stream class.
 
-    This class behaves like a file-object by providing `open()` and `close()`
-    methods. It also implements context manager methods `__enter__()` and
-    `__exit__()`, so that it can be used in `with` statement.
+    This class behaves like a file object. Once a stream is instantiated, it
+    should be opened for reading or writing by calling `open()` method. The
+    output would be an instance of Stream class which is iterable when it's
+    opened for reading.
+    In output streams (those are opened in 'w' mode), method `write()` gets a
+    list of protobuf objects and writes them out into the file in the proper
+    format compatible with stream library file format (refer to the stream
+    library documentation for further information about the file format).
+
+    The stream should be closed after performing all stream operations. Streams
+    can be also used by `with` statement just like files.
 
     Here's a sample code using the Stream class to read from a file containing a
-    set of alignments. It yields the protobuf objects stored in the file:
+    set of vg's alignments (https://github.com/vgteam/vg). It yields the
+    protobuf objects stored in the file:
 
         alns_list = []
         with Stream.open("test.gam", "rb") as stream:
@@ -91,54 +100,64 @@ class Stream(object):
         self.mode = mode
         self._fd = None
 
+    def _openfile(self):
+        """Opens the file in the given mode."""
+        assert self._fd is None
+        self._fd = gzip.open(self.fpath, self.mode)
+
+    def _closefile(self):
+        """Closes the opened file."""
+        self._fd.close()
+
     @classmethod
     def open(cls, fpath, mode='rb'):
-        """Mock function to mimic `open` method from file-like classes."""
-        return cls(fpath, mode)
+        """Opens a stream."""
+        instance = cls(fpath, mode)
+        instance._openfile()
+        return instance
 
     def __enter__(self):
-        """Opens the file. It should be run before doing any operation on the
-        file. It will automatically run by `with` statement.
+        """Enters the runtime context related to Stream class. It will be
+        automatically run by `with` statement. If the file related to the stream
+        is not opened, it opens it.
         """
-        self._fd = gzip.open(self.fpath, self.mode)
+        if self._fd is None:
+            self._openfile()
         return self
 
     def __exit__(self, *args):
-        """Closes the file. It should be run after all operation on the file. It
-        will automatically run by `with` statement.
+        """Exits the runtime context related to Stream class. It will be
+        automatically run by `with` statement. It closes the stream.
         """
-        if self._fd is not None:
-            self._fd.close()
+        self.close()
 
     def __iter__(self):
-        """Returns the iterator object."""
+        """Returns the iterator object of the stream."""
         return self._create_iterator()
 
     def _create_iterator(self):
-        """Yields all protobuf object data in the file."""
-        if self._fd is None:
-            self.__enter__()
-
+        """A generator yielding all protobuf object data in the file. It is the
+        main parser of the stream file format."""
         buff = self._fd.read()
         pos = 0
         while pos != len(buff):
             assert pos < len(buff)
             count, pos = varintDecoder(buff, pos)
+            # Read a group containing `count` number of objects.
             for idx in range(count):
                 size, pos = varintDecoder(buff, pos)
+                # Read an object from the object group.
                 yield buff[pos:pos+size]
                 pos += size
 
     def close(self):
-        """Same as `__exit__()` to close the file handler manually (without
-        using `with` statement).
-        """
-        self.__exit__()
+        """Closes the stream."""
+        self._closefile()
 
     def write(self, *pb2_obj):
-        """Writes one or more  protobuf objects to the file. A list of protobuf
-        objects can be written by calling this method sevral times before
-        calling `close()` or `__exit__()` methods.
+        """Writes a group of one or more  protobuf objects to the file. Multiple
+        object groups can be written by calling this method sevral times before
+        calling `close()` or exiting the runtime context.
         """
         count = len(pb2_obj)
         varintEncoder(self._fd.write, count)

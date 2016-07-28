@@ -27,8 +27,13 @@
 
 """Tests stream class."""
 
+# TODO: Write test functions for read and write without using context manager
+#   methods.
+
 import os
 import sys
+import gzip
+import filecmp
 from vg_pb2 import Alignment
 
 sys.path.insert(0, os.path.abspath('..'))
@@ -37,7 +42,7 @@ from stream import Stream  #noqa
 
 
 def read_aln1(fpath):
-    """Reads all 'Alignment' objects from a file.
+    """Reads all 'Alignment' objects from a file by using `with` statement.
 
     Args:
         fpath (string): path of the file to be read.
@@ -49,43 +54,77 @@ def read_aln1(fpath):
             aln.ParseFromString(aln_data)
             alns_list.append(aln)
     return alns_list
-#    with gzip.open(filename, 'rb') as fp:
-#        buff = fp.read()
-#        pos = 0
-#        while pos != len(buff):
-#            assert pos < len(buff)
-#            count, pos = varintdecoder(buff, pos)
-#            print("Reading an object group including %d object(s)..." % count)
-#            for idx in range(count):
-#                size, pos = varintdecoder(buff, pos)
-#                print("Reading object %d with size %d bytes..." %
-#                      (idx + 1, size))
-#                instance = cl()
-#                instance.ParseFromString(buff[pos:pos+size])
-#                print(instance)
-#                print("Adding to result list...")
-#                result.append(instance)
-#                pos += size
+
+
+def read_aln2(fpath):
+    """Reads all 'Alignment' objects from a file without using `with` statement.
+
+    Args:
+        fpath (string): path of the file to be read.
+    """
+    alns_list = []
+    stream = Stream.open(fpath, "rb")
+    for aln_data in stream:
+        aln = Alignment()
+        aln.ParseFromString(aln_data)
+        alns_list.append(aln)
+    stream.close()
+    return alns_list
 
 
 def write_aln1(fpath, *objs_list):
-    """Write 'Alignment' objects into the file.
+    """Write 'Alignment' objects into the file by using `with` statement.
 
     Args:
         fpath (string): path of the file to be written.
         objs_list (tuple of protobuf objects): list of objects to be written.
     """
     with Stream.open(fpath, "wb") as stream:
-        stream.write(*objs_list)
+        length = len(objs_list)
+        stream.write(*objs_list[:length//2])
+        stream.write(*objs_list[length//2:])
+
+
+def write_aln2(fpath, *objs_list):
+    """Write 'Alignment' objects into the file without using `with` statement.
+
+    Args:
+        fpath (string): path of the file to be written.
+        objs_list (tuple of protobuf objects): list of objects to be written.
+    """
+    stream = Stream.open(fpath, "wb")
+    length = len(objs_list)
+    stream.write(*objs_list[:length//2])
+    stream.write(*objs_list[length//2:])
+    stream.close()
 
 
 def test_all():
     """Runs all test cases."""
+    # Read a sample file.
     alns = read_aln1("sample_reads.gam")
-    write_aln1("re.sample_reads.gam", *alns)
-    read_alns = read_aln1("re.sample_reads.gam")
-    assert len(alns) == len(read_alns)
-    write_aln1("re.re.sample_reads.gam", *read_alns)
+    # Rewrite it into a new file in two groups of 6 objects.
+    write_aln1("rw1_sample_reads.gam", *alns)
+    # Read the rewritted file.
+    re_alns = read_aln2("rw1_sample_reads.gam")
+    # Check the length of the objects storing in both files.
+    assert len(alns) == len(re_alns)
+    # Rewrite again the read data.
+    write_aln2("rw2_sample_reads.gam", *re_alns)
+    # Unzip two generated files.
+    with gzip.open("rw1_sample_reads.gam", "rb") as gfp, \
+            open("rw1_sample_reads.gum", "wb") as ufp:
+        ufp.write(gfp.read())
+    with gzip.open("rw2_sample_reads.gam", "rb") as gfp, \
+            open("rw2_sample_reads.gum", "wb") as ufp:
+        ufp.write(gfp.read())
+    # Check whether the two generated files have the same the content.
+    assert filecmp.cmp("rw1_sample_reads.gum", "rw2_sample_reads.gum")
+    # Delete the generated files.
+    os.remove("rw1_sample_reads.gam")
+    os.remove("rw2_sample_reads.gam")
+    os.remove("rw1_sample_reads.gum")
+    os.remove("rw2_sample_reads.gum")
 
 if __name__ == "__main__":
     test_all()
