@@ -1,6 +1,7 @@
 # Added
 *.gam
 *_pb2.py
+MANIFEST
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

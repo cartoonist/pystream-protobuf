@@ -1,0 +1,4 @@
+include README.md LICENSE *.in *.txt *.py
+recursive-include stream *.py
+include test/*.py test/*.proto test/*.gam
+recursive-exclude * __pycache__ *.pyc *.pyo *_pb2.py .ropeproject
