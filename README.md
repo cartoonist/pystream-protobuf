@@ -1,10 +1,17 @@
 # pyStream
 Python implementation of [stream library](https://github.com/vgteam/stream)
-parsing all files encoded by stream and writing protobuf message instances into
-the file by the same encoding.
+for parsing all files encoded by stream and writing protobuf instances into the
+file by using the same encoding.
 
-Here's a sample code using the Stream class to read from a file containing a
-set of alignments. It yields the protobuf objects stored in the file:
+You can install pyStream using `pip`:
+
+    pip install pystream-protobuf
+
+## Examples
+Here's a sample code using the Stream class to read a file (so-called GAM file)
+containing a set of [VG](https://github.com/vgteam/vg)'s Alignment objects
+(defined [here](https://github.com/vgteam/vg/blob/master/src/vg.proto)). It
+yields the protobuf objects stored in the file:
 
 ```python
 alns_list = []
@@ -27,7 +34,8 @@ for aln_data in stream:
 stream.close()
 ```
 
-And here is a sample code for writing multiple protobuf objects into a file:
+And here is a sample code for writing multiple protobuf objects into a file
+(here a GAM file):
 
 ```python
 with Stream.open("test.gam", "wb") as stream:
