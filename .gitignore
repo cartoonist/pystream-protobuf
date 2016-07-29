@@ -2,6 +2,7 @@
 *.gam
 *_pb2.py
 MANIFEST
+README.rst
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

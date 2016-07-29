@@ -1,4 +1,5 @@
-include README.md LICENSE *.in *.txt *.py
+include README.md README.rst LICENSE *.in *.txt *.py
 recursive-include stream *.py
 include test/*.py test/*.proto test/*.gam
-recursive-exclude * __pycache__ *.pyc *.pyo *_pb2.py .ropeproject
+recursive-exclude test *_pb2.py __pycache__ *.pyc *.pyo .ropeproject
+recursive-exclude stream __pycache__ *.pyc *.pyo .ropeproject
