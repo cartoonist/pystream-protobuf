@@ -45,6 +45,8 @@ And here is another sample code for writing multiple protobuf objects into a
 file (here a GAM file):
 
 ```python
+import stream
+
 with stream.open("test.gam", "wb") as ostream:
     ostream.write(*objects_list)
     ostream.write(*another_objects_list)
@@ -53,6 +55,8 @@ with stream.open("test.gam", "wb") as ostream:
 Or
 
 ```python
+import stream
+
 ostream = stream.open("test.gam", "wb")
 ostream.write(*objects_list)
 ostream.write(*another_objects_list)
