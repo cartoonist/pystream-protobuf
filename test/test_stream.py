@@ -27,18 +27,11 @@
 
 """Tests stream class."""
 
-# TODO: Write test functions for read and write without using context manager
-#   methods.
-
 import os
-import sys
 import gzip
 import filecmp
 from vg_pb2 import Alignment
-
-sys.path.insert(0, os.path.abspath('..'))
-
-from stream import Stream  #noqa
+from context import Stream
 
 
 def read_aln1(fpath):
