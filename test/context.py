@@ -30,4 +30,4 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from stream import Stream
+import stream  #noqa

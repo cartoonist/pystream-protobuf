@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# coding=utf-8
 
 # Python implementation of stream library
 # https://github.com/vgteam/stream
@@ -25,75 +26,77 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-"""Tests stream class."""
+"""Test stream module."""
 
 import os
 import gzip
 import filecmp
-from vg_pb2 import Alignment
-from context import Stream
+from context import stream
+import vg_pb2
 
 
-def read_aln1(fpath):
-    """Reads all 'Alignment' objects from a file by using `with` statement.
+def read_alns1(fpath):
+    """Read Alignment objects from a (GAM) file by using `with` statement.
 
     Args:
         fpath (string): path of the file to be read.
     """
     alns_list = []
-    with Stream.open(fpath, "rb") as stream:
-        for aln_data in stream:
-            aln = Alignment()
-            aln.ParseFromString(aln_data)
+    with stream.open(fpath, "rb") as istream:
+        for data in istream:
+            aln = vg_pb2.Alignment()
+            aln.ParseFromString(data)
             alns_list.append(aln)
     return alns_list
 
 
-def read_aln2(fpath):
-    """Reads all 'Alignment' objects from a file without using `with` statement.
+def read_alns2(fpath):
+    """Read Alignment objects from a (GAM) file without using `with` statement.
 
     Args:
         fpath (string): path of the file to be read.
     """
     alns_list = []
-    stream = Stream.open(fpath, "rb")
-    for aln_data in stream:
-        aln = Alignment()
-        aln.ParseFromString(aln_data)
+    istream = stream.open(fpath, "rb")
+    for data in istream:
+        aln = vg_pb2.Alignment()
+        aln.ParseFromString(data)
         alns_list.append(aln)
-    stream.close()
+    istream.close()
     return alns_list
 
 
-def write_aln1(fpath, *objs_list):
-    """Write 'Alignment' objects into the file by using `with` statement.
+def write_alns1(fpath, *objs_list):
+    """Write 'Alignment' objects into the file by using `with` statement. It
+    writes half of them in one group, and then the other half in another group.
 
     Args:
         fpath (string): path of the file to be written.
-        objs_list (tuple of protobuf objects): list of objects to be written.
+        objs_list (tuple: protobuf objects): list of objects to be written.
     """
-    with Stream.open(fpath, "wb") as stream:
+    with stream.open(fpath, "wb") as ostream:
         length = len(objs_list)
-        stream.write(*objs_list[:length//2])
-        stream.write(*objs_list[length//2:])
+        ostream.write(*objs_list[:length//2])
+        ostream.write(*objs_list[length//2:])
 
 
-def write_aln2(fpath, *objs_list):
+def write_alns2(fpath, *objs_list):
     """Write 'Alignment' objects into the file without using `with` statement.
+    It writes half of them in one group, and the other half in another group.
 
     Args:
         fpath (string): path of the file to be written.
-        objs_list (tuple of protobuf objects): list of objects to be written.
+        objs_list (tuple: protobuf objects): list of objects to be written.
     """
-    stream = Stream.open(fpath, "wb")
+    ostream = stream.open(fpath, "wb")
     length = len(objs_list)
-    stream.write(*objs_list[:length//2])
-    stream.write(*objs_list[length//2:])
-    stream.close()
+    ostream.write(*objs_list[:length//2])
+    ostream.write(*objs_list[length//2:])
+    ostream.close()
 
 
 def test_all():
-    """Runs all test cases."""
+    """Run all test cases."""
     # Files
     testdir = os.path.dirname(os.path.realpath(__file__))
     gamfile = os.path.join(testdir, "sample_reads.gam")
@@ -105,16 +108,16 @@ def test_all():
     rw2_gumfile = os.path.join(testdir, "rw2_sample_reads.gum")
 
     # Read a sample file.
-    alns = read_aln1(gamfile)
+    alns = read_alns1(gamfile)
     assert len(alns) == gamfile_nof_alns
     # Rewrite it into a new file in two groups of 6 objects.
-    write_aln1(rw1_gamfile, *alns)
+    write_alns1(rw1_gamfile, *alns)
     # Read the rewritted file.
-    re_alns = read_aln2(rw1_gamfile)
+    re_alns = read_alns2(rw1_gamfile)
     # Check the length of the objects storing in both files.
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
-    write_aln2(rw2_gamfile, *re_alns)
+    write_alns2(rw2_gamfile, *re_alns)
     # Unzip two generated files.
     with gzip.open(rw1_gamfile, "rb") as gfp, \
             open(rw1_gumfile, "wb") as ufp:

@@ -38,56 +38,72 @@ from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
+def open(fpath, mode='rb'):
+    """Open an stream."""
+    return Stream(fpath, mode)
+
+
 class Stream(object):
     """Stream class.
 
-    This class behaves like a file object. Once a stream is instantiated, it
-    should be opened for reading or writing by calling `open()` method. The
-    output would be an instance of Stream class which is iterable when it's
-    opened for reading.
-    In output streams (those are opened in 'w' mode), method `write()` gets a
-    list of protobuf objects and writes them out into the file in the proper
-    format compatible with stream library file format (refer to the stream
-    library documentation for further information about the file format).
+    Read and write protocol buffer streams encoded by 'stream' library. Stream
+    objects instantiated for reading by setting mode to 'rb' (input `Stream`s)
+    are iterable. So, protobuf objects can be obtained by iterate over the
+    Stream. Stream iterator yields protobuf encoded data, so it should be parsed
+    by using proper methods in Google Protocol Buffer library (for example
+    `ParseFromString()` method).
+
+    In output `Stream`s (those are instantiated with 'w' mode), method `write()`
+    groups the given list of protobuf objects and writes them into the stream in
+    the same format which is readable by any other parsers (refer to the stream
+    library documentation for further information).
 
     The stream should be closed after performing all stream operations. Streams
     can be also used by `with` statement just like files.
 
-    Here's a sample code using the Stream class to read from a file containing a
-    set of vg's alignments (https://github.com/vgteam/vg). It yields the
-    protobuf objects stored in the file:
+    Here's a sample code using the Stream class to read from a file (so-called
+    GAM file) containing a set of VG's (https://github.com/vgteam/vg) Alignment
+    objects (defined: https://github.com/vgteam/vg/blob/master/src/vg.proto). It
+    yields the protobuf objects stored in the file:
+
+        import stream
+        import vg_pb2
 
         alns_list = []
-        with Stream.open("test.gam", "rb") as stream:
-            for aln_data in stream:
-                aln = Alignment()
-                aln.ParseFromString(aln_data)
+        with stream.open("test.gam", "rb") as istream:
+            for data in istream:
+                aln = vg_pb2.Alignment()
+                aln.ParseFromString(data)
                 alns_list.append(aln)
 
     Or
 
+        import stream
+        import vg_pb2
+
         alns_list = []
-        stream = Stream.open("test.gam", "rb")
-        for aln_data in stream:
-            aln = Alignment()
-            aln.ParseFromString(aln_data)
+        istream = stream.open("test.gam", "rb")
+        for data in istream:
+            aln = vg_pb2.Alignment()
+            aln.ParseFromString(data)
             alns_list.append(aln)
-        stream.close()
+        istream.close()
 
-    And here is a sample code for writing multiple protobuf objects into a file:
+    And here is another sample code for writing multiple protobuf objects into a
+    file (here a GAM file):
 
-        with Stream.open("test.gam", "wb") as stream:
-            stream.write(*objects_list)
-            stream.write(*another_objects_list)
+        with stream.open("test.gam", "wb") as ostream:
+            ostream.write(*objects_list)
+            ostream.write(*another_objects_list)
 
     Or
 
-        stream = Stream.open("test.gam", "wb")
-        stream.write(*objects_list)
-        stream.write(*another_objects_list)
-        stream.close()
+        ostream = stream.open("test.gam", "wb")
+        ostream.write(*objects_list)
+        ostream.write(*another_objects_list)
+        ostream.close()
     """
-    def __init__(self, fpath=None, mode='rb'):
+    def __init__(self, fpath, mode='rb'):
         """Constructor for the Stream class.
 
         Args:
@@ -96,48 +112,27 @@ class Stream(object):
                 'w', or 'wb', depending on whether the file will be read or
                 written. The default is 'rb'.
         """
-        self.fpath = fpath
-        self.mode = mode
-        self._fd = None
-
-    def _openfile(self):
-        """Opens the file in the given mode."""
-        assert self._fd is None
-        self._fd = gzip.open(self.fpath, self.mode)
-
-    def _closefile(self):
-        """Closes the opened file."""
-        self._fd.close()
-
-    @classmethod
-    def open(cls, fpath, mode='rb'):
-        """Opens a stream."""
-        instance = cls(fpath, mode)
-        instance._openfile()
-        return instance
+        self._fd = gzip.open(fpath, mode)
 
     def __enter__(self):
-        """Enters the runtime context related to Stream class. It will be
-        automatically run by `with` statement. If the file related to the stream
-        is not opened, it opens it.
+        """Enter the runtime context related to Stream class. It will be
+        automatically run by `with` statement.
         """
-        if self._fd is None:
-            self._openfile()
         return self
 
     def __exit__(self, *args):
-        """Exits the runtime context related to Stream class. It will be
+        """Exit the runtime context related to Stream class. It will be
         automatically run by `with` statement. It closes the stream.
         """
         self.close()
 
     def __iter__(self):
-        """Returns the iterator object of the stream."""
-        return self._create_iterator()
+        """Return the iterator object of the stream."""
+        return self._get_objs()
 
-    def _create_iterator(self):
+    def _get_objs(self):
         """A generator yielding all protobuf object data in the file. It is the
-        main parser of the stream file format."""
+        main parser of the stream encoding."""
         buff = self._fd.read()
         pos = 0
         while pos != len(buff):
@@ -151,13 +146,13 @@ class Stream(object):
                 pos += size
 
     def close(self):
-        """Closes the stream."""
-        self._closefile()
+        """Close the stream."""
+        self._fd.close()
 
     def write(self, *pb2_obj):
-        """Writes a group of one or more  protobuf objects to the file. Multiple
-        object groups can be written by calling this method sevral times before
-        calling `close()` or exiting the runtime context.
+        """Write a group of one or more protobuf objects to the file. Multiple
+        object groups can be written by calling this method several times before
+        closing stream or exiting the runtime context.
         """
         count = len(pb2_obj)
         varintEncoder(self._fd.write, count)

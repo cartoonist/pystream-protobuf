@@ -1,4 +1,6 @@
 # coding=utf-8
+
+from .stream import open
 from .stream import Stream
 
 __title__ = "stream"
