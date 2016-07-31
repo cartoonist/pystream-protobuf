@@ -94,30 +94,41 @@ def write_aln2(fpath, *objs_list):
 
 def test_all():
     """Runs all test cases."""
+    # Files
+    testdir = os.path.dirname(os.path.realpath(__file__))
+    gamfile = os.path.join(testdir, "sample_reads.gam")
+    gamfile_nof_alns = 12
+    rw1_gamfile = os.path.join(testdir, "rw1_sample_reads.gam")
+    rw2_gamfile = os.path.join(testdir, "rw2_sample_reads.gam")
+    # GUM file == Unzipped GAM file
+    rw1_gumfile = os.path.join(testdir, "rw1_sample_reads.gum")
+    rw2_gumfile = os.path.join(testdir, "rw2_sample_reads.gum")
+
     # Read a sample file.
-    alns = read_aln1("sample_reads.gam")
+    alns = read_aln1(gamfile)
+    assert len(alns) == gamfile_nof_alns
     # Rewrite it into a new file in two groups of 6 objects.
-    write_aln1("rw1_sample_reads.gam", *alns)
+    write_aln1(rw1_gamfile, *alns)
     # Read the rewritted file.
-    re_alns = read_aln2("rw1_sample_reads.gam")
+    re_alns = read_aln2(rw1_gamfile)
     # Check the length of the objects storing in both files.
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
-    write_aln2("rw2_sample_reads.gam", *re_alns)
+    write_aln2(rw2_gamfile, *re_alns)
     # Unzip two generated files.
-    with gzip.open("rw1_sample_reads.gam", "rb") as gfp, \
-            open("rw1_sample_reads.gum", "wb") as ufp:
+    with gzip.open(rw1_gamfile, "rb") as gfp, \
+            open(rw1_gumfile, "wb") as ufp:
         ufp.write(gfp.read())
-    with gzip.open("rw2_sample_reads.gam", "rb") as gfp, \
-            open("rw2_sample_reads.gum", "wb") as ufp:
+    with gzip.open(rw2_gamfile, "rb") as gfp, \
+            open(rw2_gumfile, "wb") as ufp:
         ufp.write(gfp.read())
     # Check whether the two generated files have the same the content.
-    assert filecmp.cmp("rw1_sample_reads.gum", "rw2_sample_reads.gum")
+    assert filecmp.cmp(rw1_gumfile, rw2_gumfile)
     # Delete the generated files.
-    os.remove("rw1_sample_reads.gam")
-    os.remove("rw2_sample_reads.gam")
-    os.remove("rw1_sample_reads.gum")
-    os.remove("rw2_sample_reads.gum")
+    os.remove(rw1_gamfile)
+    os.remove(rw1_gumfile)
+    os.remove(rw2_gamfile)
+    os.remove(rw2_gumfile)
 
 if __name__ == "__main__":
     test_all()
