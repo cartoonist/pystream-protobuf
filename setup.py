@@ -10,29 +10,30 @@ try:
 except ImportError:
     from distutils.core import setup
 
+PYPI_DISTNAME = "pystream-protobuf"
+
 PROC = subprocess.run(["git", "log", "-n1", "--pretty=%h"],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-if PROC.returncode != 0:
-    print("ERROR: while retreiving current git commit hash...", file=sys.stderr)
-    print("The error message is:\n> %s" % PROC.stderr.decode("utf-8").strip(),
-          file=sys.stderr)
-    exit(1)
+if PROC.returncode == 0:
+    COMMIT = PROC.stdout.decode("utf-8").strip()
+    PROC = subprocess.run(["git", "describe", "--exact-match", "--tags", COMMIT],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-COMMIT = PROC.stdout.decode("utf-8").strip()
-PROC = subprocess.run(["git", "describe", "--exact-match", "--tags", COMMIT],
-                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if PROC.returncode != 0:
+        print("ERROR: there's no tag associated with the current commit",
+            file=sys.stderr)
+        print("> %s" % PROC.stderr.decode("utf-8").strip(), file=sys.stderr)
+        exit(1)
 
-if PROC.returncode != 0:
-    print("ERROR: there's no tag associated with the current commit",
-          file=sys.stderr)
-    print("> %s" % PROC.stderr.decode("utf-8").strip(), file=sys.stderr)
-    exit(1)
-
-TAG = PROC.stdout.decode("utf-8").strip()
+    TAG = PROC.stdout.decode("utf-8").strip()
+else:
+    import pkg_resources
+    dist = pkg_resources.get_distribution(PYPI_DISTNAME)
+    TAG = dist.version
 
 setup(
-    name='pystream-protobuf',
+    name=PYPI_DISTNAME,
     packages=['stream'],
     version=TAG,
     description='Python implementation of stream library',
