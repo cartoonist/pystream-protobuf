@@ -17,12 +17,13 @@ vg_pb2.py:
 test: vg_pb2.py
 	${TEST}
 
-dist-test:
-	pandoc -o README.rst README.md
+README.rst: README.md
+	pandoc -o $@ $<
+
+dist-test: README.rst
 	python setup.py register -r ${TESTREPO}
 	python setup.py sdist upload -r ${TESTREPO}
 
-dist:
-	pandoc -o README.rst README.md
+dist: README.rst
 	python setup.py register -r ${MAINREPO}
 	python setup.py sdist upload -r ${MAINREPO}
