@@ -20,10 +20,13 @@ test: vg_pb2.py
 README.rst: README.md
 	pandoc -o $@ $<
 
-dist-test: README.rst
+VERSION:
+	git describe --exact-match --tags $(git log -n1 --pretty=%h) > $@
+
+dist-test: README.rst VERSION
 	python setup.py register -r ${TESTREPO}
 	python setup.py sdist upload -r ${TESTREPO}
 
-dist: README.rst
+dist: README.rst VERSION
 	python setup.py register -r ${MAINREPO}
 	python setup.py sdist upload -r ${MAINREPO}
