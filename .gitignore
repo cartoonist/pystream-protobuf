@@ -3,6 +3,7 @@
 *_pb2.py
 MANIFEST
 README.rst
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
