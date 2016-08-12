@@ -1,4 +1,4 @@
-include VERSION Makefile README.md README.rst LICENSE MANIFEST.in requirements.txt
+include VERSION Makefile README.md README.rst LICENSE requirements.txt
 recursive-include stream *.py
 include test/*.py test/*.proto test/*.gam
 recursive-exclude test *_pb2.py
