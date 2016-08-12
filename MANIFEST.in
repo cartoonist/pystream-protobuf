@@ -1,5 +1,4 @@
-include VERSION Makefile README.md README.rst LICENSE *.in *.txt *.py
+include VERSION Makefile README.md README.rst LICENSE MANIFEST.in requirements.txt
 recursive-include stream *.py
 include test/*.py test/*.proto test/*.gam
-recursive-exclude test *_pb2.py __pycache__ *.pyc *.pyo .ropeproject
-recursive-exclude stream __pycache__ *.pyc *.pyo .ropeproject
+recursive-exclude test *_pb2.py

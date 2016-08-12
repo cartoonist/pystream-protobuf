@@ -7,21 +7,30 @@ try:
 except ImportError:
     from distutils.core import setup
 
-PYPI_DISTNAME = "pystream-protobuf"
-
 with open("VERSION", "r") as version:
     TAG = version.readline().strip()
 
+PYPI_DISTNAME = "pystream-protobuf"
+PACKAGE_NAME = "stream"
+DESCRIPTION = "Python implementation of stream library"
+GIT_URL = "https://github.com/cartoonist/"
+VCS_URL = GIT_URL + PYPI_DISTNAME
+TAR_URL = GIT_URL + PYPI_DISTNAME + "/tarball/" + TAG
+KEYWORDS = ['protobuf', 'stream', 'protocol buffer']
+REQUIRES = ['protobuf==3.0.0']
+AUTHOR = "Ali Ghaffaari"
+EMAIL = "ali.ghaffaari@gmail.com"
+
 setup(
     name=PYPI_DISTNAME,
-    packages=['stream'],
+    packages=[PACKAGE_NAME],
     version=TAG,
-    description='Python implementation of stream library',
-    author='Ali Ghaffaari',
-    author_email='ali.ghaffaari@gmail.com',
-    url='https://github.com/cartoonist/pystream-protobuf',
-    download_url='https://github.com/cartoonist/pystream-protobuf/tarball/'+TAG,
-    keywords=['protobuf', 'stream', 'protocol buffer'],
+    description=DESCRIPTION,
+    author=AUTHOR,
+    author_email=EMAIL,
+    url=VCS_URL,
+    download_url=TAR_URL,
+    keywords=KEYWORDS,
     classifiers=[],
-    install_requires=['protobuf==3.0.0b4'],
+    install_requires=REQUIRES,
 )
