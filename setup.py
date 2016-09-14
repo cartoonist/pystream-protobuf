@@ -23,6 +23,7 @@ setup(
     description=stream.release.__description__,
     author=stream.release.__author__,
     author_email=stream.release.__email__,
+    license=stream.release.__license__,
     url=_VCS_URL,
     download_url=_TAR_URL,
     keywords=stream.release.__keywords__,
