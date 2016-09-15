@@ -30,7 +30,7 @@ __email__ = "ali.ghaffaari@mpi-inf.mpg.de"
 __license__ = "MIT"
 
 # Release
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __status__ = DS_BETA
 
 # Sub-packages
