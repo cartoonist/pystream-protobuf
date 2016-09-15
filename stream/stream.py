@@ -30,9 +30,6 @@ parsing all files encoded by stream and writing protobuf message instances into
 the file by the same encoding.
 """
 
-# TODO: Implement other methods of stream library such as `write_buffered()` or
-#    `for_each_parallel()`.
-
 import gzip
 from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
