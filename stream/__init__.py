@@ -27,3 +27,4 @@
 
 from .stream import open    # noqa pylint: disable=redefined-builtin
 from .stream import Stream  # noqa
+from . import release       # noqa
