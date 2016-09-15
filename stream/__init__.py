@@ -25,10 +25,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .stream import open
-from .stream import Stream
-
-__title__ = "stream"
-__author__ = "Ali Ghaffaari"
-__email__ = "ali.ghaffaari@mpi-inf.mpg.de"
-__license__ = "MIT, see LICENSE"
+from .stream import open    # noqa pylint: disable=redefined-builtin
+from .stream import Stream  # noqa
+from . import release       # noqa

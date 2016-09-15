@@ -1,3 +1,8 @@
+[![Build Status](https://img.shields.io/travis/cartoonist/pystream-protobuf.svg?style=flat-square)](https://travis-ci.org/cartoonist/pystream-protobuf)
+[![PyPI Release](https://img.shields.io/pypi/v/pystream-protobuf.svg?style=flat-square)](https://pypi.python.org/pypi/pystream-protobuf)
+[![Python](https://img.shields.io/pypi/pyversions/pystream-protobuf.svg?style=flat-square)](https://www.python.org/download/releases/3.0/)
+[![License](https://img.shields.io/pypi/l/pystream-protobuf.svg?style=flat-square)](LICENSE)
+
 # pyStream
 Python implementation of [stream library](https://github.com/vgteam/stream)
 for parsing all files encoded by stream and writing protobuf instances into the

@@ -88,7 +88,7 @@ def write_alns2(fpath, *objs_list):
         fpath (string): path of the file to be written.
         objs_list (tuple: protobuf objects): list of objects to be written.
     """
-    ostream = stream.open(fpath, "wb")
+    ostream = stream.open(fpath, "wb", buffer_size=6)
     length = len(objs_list)
     ostream.write(*objs_list[:length//2])
     ostream.write(*objs_list[length//2:])

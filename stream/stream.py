@@ -30,17 +30,14 @@ parsing all files encoded by stream and writing protobuf message instances into
 the file by the same encoding.
 """
 
-# TODO: Implement other methods of stream library such as `write_buffered()` or
-#    `for_each_parallel()`.
-
 import gzip
 from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
-def open(fpath, mode='rb'):
+def open(fpath, mode='rb', buffer_size=-1):  # pylint: disable=redefined-builtin
     """Open an stream."""
-    return Stream(fpath, mode)
+    return Stream(fpath, mode, buffer_size)
 
 
 class Stream(object):
@@ -103,7 +100,7 @@ class Stream(object):
         ostream.write(*another_objects_list)
         ostream.close()
     """
-    def __init__(self, fpath, mode='rb'):
+    def __init__(self, fpath, mode='rb', buffer_size=-1):
         """Constructor for the Stream class.
 
         Args:
@@ -111,8 +108,12 @@ class Stream(object):
             mode (string): The mode argument can be any of 'r', 'rb', 'a', 'ab',
                 'w', or 'wb', depending on whether the file will be read or
                 written. The default is 'rb'.
+            buffer_size (int): Write buffer size. The objects will be buffered
+                before writing. No buffering will be made if buffer_size is -1.
         """
         self._fd = gzip.open(fpath, mode)
+        self._buffer_size = buffer_size
+        self._write_buff = []
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
@@ -130,34 +131,69 @@ class Stream(object):
         """Return the iterator object of the stream."""
         return self._get_objs()
 
+    def _read_varint(self):
+        """Read a varint from file, parse it, and return the decoded integer."""
+        buff = self._fd.read(1)
+        if buff == b'':
+            return 0
+
+        while (buff[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
+            new_byte = self._fd.read(1)
+            if new_byte == b'':
+                raise EOFError('unexpected EOF.')
+            buff += new_byte
+
+        varint, _ = varintDecoder(buff, 0)
+
+        return varint
+
     def _get_objs(self):
         """A generator yielding all protobuf object data in the file. It is the
-        main parser of the stream encoding."""
-        buff = self._fd.read()
-        pos = 0
-        while pos != len(buff):
-            assert pos < len(buff)
-            count, pos = varintDecoder(buff, pos)
+        main parser of the stream encoding.
+        """
+        while True:
+            count = self._read_varint()
+            if count == 0:
+                break
             # Read a group containing `count` number of objects.
-            for idx in range(count):
-                size, pos = varintDecoder(buff, pos)
+            for _ in range(count):
+                size = self._read_varint()
+                if size == 0:
+                    raise EOFError('unexpected EOF.')
                 # Read an object from the object group.
-                yield buff[pos:pos+size]
-                pos += size
+                yield self._fd.read(size)
 
     def close(self):
         """Close the stream."""
+        self.flush()
         self._fd.close()
 
     def write(self, *pb2_obj):
         """Write a group of one or more protobuf objects to the file. Multiple
         object groups can be written by calling this method several times before
         closing stream or exiting the runtime context.
+
+        The input protobuf objects get buffered and will be written down when
+        the number of buffered objects exceed the `self._buffer_size`.
         """
-        count = len(pb2_obj)
-        varintEncoder(self._fd.write, count)
+        count = len(self._write_buff)
+        if count >= self._buffer_size:
+            self.flush()
 
         for obj in pb2_obj:
-            s = obj.SerializeToString()
-            varintEncoder(self._fd.write, len(s))
-            self._fd.write(s)
+            self._write_buff.append(obj)
+
+    def flush(self):
+        """Write down buffer to the file."""
+        count = len(self._write_buff)
+        if count == 0:
+            return
+
+        varintEncoder(self._fd.write, count)
+
+        for obj in self._write_buff:
+            obj_str = obj.SerializeToString()
+            varintEncoder(self._fd.write, len(obj_str))
+            self._fd.write(obj_str)
+
+        self._write_buff = []
