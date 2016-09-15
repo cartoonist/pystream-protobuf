@@ -46,7 +46,9 @@ __classifiers__ = [
     'License :: OSI Approved :: MIT License',
 
     # Supported Python versions.
-    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
 
     # Intended Audience and Topic
     'Intended Audience :: Developers',
