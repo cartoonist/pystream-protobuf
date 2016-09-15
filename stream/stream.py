@@ -130,20 +130,37 @@ class Stream(object):
         """Return the iterator object of the stream."""
         return self._get_objs()
 
+    def _read_varint(self):
+        """Read a varint from file, parse it, and return the decoded integer."""
+        buff = self._fd.read(1)
+        if buff == b'':
+            return 0
+
+        while (buff[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
+            new_byte = self._fd.read(1)
+            if new_byte == b'':
+                raise EOFError('unexpected EOF.')
+            buff += new_byte
+
+        varint, _ = varintDecoder(buff, 0)
+
+        return varint
+
     def _get_objs(self):
         """A generator yielding all protobuf object data in the file. It is the
-        main parser of the stream encoding."""
-        buff = self._fd.read()
-        pos = 0
-        while pos != len(buff):
-            assert pos < len(buff)
-            count, pos = varintDecoder(buff, pos)
+        main parser of the stream encoding.
+        """
+        while True:
+            count = self._read_varint()
+            if count == 0:
+                break
             # Read a group containing `count` number of objects.
-            for idx in range(count):
-                size, pos = varintDecoder(buff, pos)
+            for _ in range(count):
+                size = self._read_varint()
+                if size == 0:
+                    raise EOFError('unexpected EOF.')
                 # Read an object from the object group.
-                yield buff[pos:pos+size]
-                pos += size
+                yield self._fd.read(size)
 
     def close(self):
         """Close the stream."""
