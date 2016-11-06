@@ -16,4 +16,6 @@ before_install:
 install: "pip install tox-travis"
 
 # command to run tests
-script: "tox"
+script:
+  - /usr/bin/make README.rst
+  - tox
