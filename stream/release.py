@@ -30,11 +30,8 @@ __email__ = "ali.ghaffaari@mpi-inf.mpg.de"
 __license__ = "MIT"
 
 # Release
-__version__ = "1.2.2"
+__version__ = "1.3"
 __status__ = DS_BETA
-
-# Sub-packages
-__subpackages__ = []
 
 # PyPI-related information
 __keywords__ = ['protobuf', 'stream', 'protocol buffer']
@@ -53,7 +50,8 @@ __classifiers__ = [
     # Intended Audience and Topic
     'Intended Audience :: Developers',
 ]
-__requires__ = ['protobuf==3.0.0']
-__tests_require__ = [
-    'nose==1.3.7',
-]
+__requires__ = ['protobuf>=3.0.0']
+__tests_require__ = []
+__extras_require__ = {
+    'test': ['nose'],
+}
