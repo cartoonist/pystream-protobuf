@@ -1,13 +1,18 @@
 language: python
+
 python:
   - "3.3"
   - "3.4"
   - "3.5"
+
+# build and install protocol buffer compiler from the source code.
 before_install:
   - wget "https://github.com/google/protobuf/releases/download/v3.0.2/protobuf-python-3.0.2.tar.gz"
   - tar xzf protobuf-python-3.0.2.tar.gz
   - pushd protobuf-3.0.2 && ./configure --prefix=/usr && make && sudo make install && popd
+
 # command to install dependencies
-install: "make init"
+install: "pip install tox-travis"
+
 # command to run tests
-script: "make test"
+script: "tox"
