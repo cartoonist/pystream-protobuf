@@ -76,6 +76,7 @@ def write_objs2(fpath, *objs_list):
     """Write protobuf message objects into the file w/o using `with` statement.
 
     It writes half of them in one group, and then the other half in another one
+    by setting buffer size to half of the object list size.
 
     NOTE: Do the same as `write_objs1`.
 
@@ -83,10 +84,8 @@ def write_objs2(fpath, *objs_list):
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    ostream = stream.open(fpath, "wb", buffer_size=6)
-    length = len(objs_list)
-    ostream.write(*objs_list[:length//2])
-    ostream.write(*objs_list[length//2:])
+    ostream = stream.open(fpath, "wb", buffer_size=(len(objs_list)//2))
+    ostream.write(*objs_list)
     ostream.close()
 
 

@@ -124,12 +124,17 @@ class Stream(object):
         Args:
             pb2_obj (*protobuf.message.Message): list of protobuf messages.
         """
-        count = len(self._write_buff)
-        if count >= self._buffer_size:
-            self.flush()
+        base = len(self._write_buff)
 
-        for obj in pb2_obj:
+        for idx, obj in enumerate(pb2_obj):
+            if self._buffer_size != -1 and \
+                    (idx + base) != 0 and \
+                    (idx + base) % self._buffer_size == 0:
+                self.flush()
             self._write_buff.append(obj)
+
+        if self._buffer_size == -1:
+            self.flush()
 
     def flush(self):
         """Write down buffer to the file."""
