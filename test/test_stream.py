@@ -1,42 +1,28 @@
-#!/usr/bin/env python3
 # coding=utf-8
 
-# Python implementation of stream library
-# https://github.com/vgteam/stream
-#
-# The MIT License (MIT)
-#
-# Copyright (c) 2016 Ali Ghaffaari
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+"""
+    test.test_stream
+    ~~~~~~~~~~~~~~~~
 
-"""Test stream module."""
+    Test stream.stream module.
+
+    :copyright: (c) 2016 by Ali Ghaffaari.
+    :license: MIT, see LICENSE for more details.
+"""
 
 import os
 import gzip
 import filecmp
-from context import stream
-import vg_pb2
+
+from .context import stream
+from . import vg_pb2
 
 
 def read_alns1(fpath):
-    """Read Alignment objects from a (GAM) file by using `with` statement.
+    """Read protobuf objects from a file by using `with` statement.
+
+    Here, as an example, the file is a GAM file containing Alignment messages
+    defined in vg_pb2.
 
     Args:
         fpath (string): path of the file to be read.
@@ -51,7 +37,12 @@ def read_alns1(fpath):
 
 
 def read_alns2(fpath):
-    """Read Alignment objects from a (GAM) file without using `with` statement.
+    """Read protobuf objects from a file without using `with` statement.
+
+    Here, as an example, the file is a GAM file containing Alignment messages
+    defined in vg_pb2.
+
+    NOTE: Do the same as `read_alns1`.
 
     Args:
         fpath (string): path of the file to be read.
@@ -66,13 +57,14 @@ def read_alns2(fpath):
     return alns_list
 
 
-def write_alns1(fpath, *objs_list):
-    """Write 'Alignment' objects into the file by using `with` statement. It
-    writes half of them in one group, and then the other half in another group.
+def write_objs1(fpath, *objs_list):
+    """Write protobuf message objects into the file by using `with` statement.
+
+    It writes half of them in one group, and then the other half in another one.
 
     Args:
         fpath (string): path of the file to be written.
-        objs_list (tuple: protobuf objects): list of objects to be written.
+        objs_list (*protobuf.message.Message): list of objects to be written.
     """
     with stream.open(fpath, "wb") as ostream:
         length = len(objs_list)
@@ -80,13 +72,16 @@ def write_alns1(fpath, *objs_list):
         ostream.write(*objs_list[length//2:])
 
 
-def write_alns2(fpath, *objs_list):
-    """Write 'Alignment' objects into the file without using `with` statement.
-    It writes half of them in one group, and the other half in another group.
+def write_objs2(fpath, *objs_list):
+    """Write protobuf message objects into the file w/o using `with` statement.
+
+    It writes half of them in one group, and then the other half in another one
+
+    NOTE: Do the same as `write_objs1`.
 
     Args:
         fpath (string): path of the file to be written.
-        objs_list (tuple: protobuf objects): list of objects to be written.
+        objs_list (*protobuf.message.Message): list of objects to be written.
     """
     ostream = stream.open(fpath, "wb", buffer_size=6)
     length = len(objs_list)
@@ -111,13 +106,13 @@ def test_all():
     alns = read_alns1(gamfile)
     assert len(alns) == gamfile_nof_alns
     # Rewrite it into a new file in two groups of 6 objects.
-    write_alns1(rw1_gamfile, *alns)
-    # Read the rewritted file.
+    write_objs1(rw1_gamfile, *alns)
+    # Read the rewritten file.
     re_alns = read_alns2(rw1_gamfile)
     # Check the length of the objects storing in both files.
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
-    write_alns2(rw2_gamfile, *re_alns)
+    write_objs2(rw2_gamfile, *re_alns)
     # Unzip two generated files.
     with gzip.open(rw1_gamfile, "rb") as gfp, \
             open(rw1_gumfile, "wb") as ufp:
