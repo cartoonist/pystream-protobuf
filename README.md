@@ -5,9 +5,13 @@
 [![License](https://img.shields.io/pypi/l/pystream-protobuf.svg?style=flat-square)](https://github.com/cartoonist/pystream-protobuf/blob/master/LICENSE)
 
 # pyStream
-Python implementation of [stream library](https://github.com/vgteam/stream)
-for parsing all files encoded by stream and writing protobuf instances into the
-file by using the same encoding.
+Python implementation of [stream library](https://github.com/vgteam/stream).
+Multiple protobuf messages can be written into a stream by using this
+library. It enables stream processing of protobuf messages and can be
+used for parsing all files encoded by stream library and writing
+protobuf instances into a file by the same encoding. Refer to the
+library [github page](https://github.com/vgteam/stream) for more
+information about formatting.
 
 ## Installation
 You can install pyStream using `pip`:
@@ -15,10 +19,10 @@ You can install pyStream using `pip`:
     pip install pystream-protobuf
 
 ## Examples
-Here's a sample code using the Stream class to read a file (so-called GAM file)
-containing a set of [VG](https://github.com/vgteam/vg)'s Alignment objects
-(defined [here](https://github.com/vgteam/vg/blob/master/src/vg.proto)). It
-yields the protobuf objects stored in the file:
+Here's a sample code using the Stream class to read a file (so-called
+GAM file) containing a set of [VG](https://github.com/vgteam/vg)'s
+Alignment objects (defined [here](https://github.com/vgteam/vg/blob/master/src/vg.proto)).
+It yields the protobuf objects stored in the file:
 
 ```python
 import stream
@@ -47,8 +51,8 @@ for data in istream:
 istream.close()
 ```
 
-And here is another sample code for writing multiple protobuf objects into a
-file (here a GAM file):
+And here is another sample code for writing multiple protobuf objects
+into a file (here a GAM file):
 
 ```python
 import stream
@@ -68,3 +72,27 @@ ostream.write(*objects_list)
 ostream.write(*another_objects_list)
 ostream.close()
 ```
+
+## More features
+
+### Buffered write
+By default, all protobuf message objects provided on each call are
+written in a group of messages. The messages can be buffered and
+write to the stream in a group of fixed size whenever possible. The
+size of the buffer can be changed (from default value 0 --- no buffer)
+by passing it through keyword argumnet `buffer_size` when Stream class
+is constructed or a stream is opened. This value is the number of
+objects which should be written in a group.
+
+### Grouping message
+Messages can be grouped in varied size when writing to a stream by
+setting buffer size sufficiently large or infinity (-1) and calling
+`flush` method of Stream class whenever desired.
+
+### Group delimiter
+Group of objects can be separated by a delimiter of the choice (or by
+default `None`) when reading from a stream. Sometimes, it can help to
+identify the end of a group which is hidden from the library user by
+default. This feature can be enable by setting `group_delimiter` True
+when constructing a Stream instance or openning a stream. The delimiter
+class can also be specified by `delimiter_cls`.

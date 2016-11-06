@@ -1,9 +1,15 @@
-# Added
-*.gam
-*_pb2.py
+# Distribution / packaging
 MANIFEST
 README.rst
+
+# protobuf generated source codes
+*_pb2.py
+
+# IDE setting files
+#  PyCharm
 .idea/
+
+# ### GITHUB DEFAULTS ### #
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -86,7 +92,7 @@ celerybeat-schedule
 .env
 
 # virtualenv
-venv/
+venv
 ENV/
 
 # Spyder project settings
