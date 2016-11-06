@@ -17,7 +17,7 @@ from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
 def open(fpath, mode='rb',                   # pylint: disable=redefined-builtin
-         buffer_size=-1, **kwargs):
+         buffer_size=0, **kwargs):
     """Open an stream."""
     return Stream(fpath, mode, buffer_size, **kwargs)
 
@@ -50,7 +50,7 @@ class Stream(object):
                         change (read-mode only).
         _delimiter:     the delimiter class (read-mode only).
     """
-    def __init__(self, fpath, mode='rb', buffer_size=-1, **kwargs):
+    def __init__(self, fpath, mode='rb', buffer_size=0, **kwargs):
         """Constructor for the Stream class.
 
         Args:
@@ -59,7 +59,12 @@ class Stream(object):
                 'w', or 'wb', depending on whether the file will be read or
                 written. The default is 'rb'.
             buffer_size (int): Write buffer size. The objects will be buffered
-                before writing. No buffering will be made if buffer_size is -1.
+                before writing. No buffering will be made if buffer_size is 0.
+                It means that size of the group will be determined by the size
+                of object list provided on `write` call. Setting `buffer_size`
+                to -1 means infinite buffer size. Method `flush` should be
+                called manually or by closing stream. All objects will be write
+                in one group upon `flush` or `close` events.
 
         Keyword args:
             group_delimiter (boolean): indicate the end of a message group if
@@ -142,13 +147,13 @@ class Stream(object):
         base = len(self._write_buff)
 
         for idx, obj in enumerate(pb2_obj):
-            if self._buffer_size != -1 and \
+            if self._buffer_size > 0 and \
                     (idx + base) != 0 and \
                     (idx + base) % self._buffer_size == 0:
                 self.flush()
             self._write_buff.append(obj)
 
-        if self._buffer_size == -1:
+        if self._buffer_size == 0:
             self.flush()
 
     def flush(self):
