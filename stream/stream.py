@@ -16,9 +16,10 @@ from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
-def open(fpath, mode='rb', buffer_size=-1):  # pylint: disable=redefined-builtin
+def open(fpath, mode='rb',                   # pylint: disable=redefined-builtin
+         buffer_size=-1, **kwargs):
     """Open an stream."""
-    return Stream(fpath, mode, buffer_size)
+    return Stream(fpath, mode, buffer_size, **kwargs)
 
 
 class Stream(object):
@@ -44,8 +45,12 @@ class Stream(object):
         _buffer_size:   size of the buffer to write as a one group of messages
                         (write-mode only).
         _write_buff:    list of buffered messages for writing (write-mode only).
+        _group_delim:   if true it returns an instance of the `_delimiter` class
+                        after reading each group of messages to indicate a group
+                        change (read-mode only).
+        _delimiter:     the delimiter class (read-mode only).
     """
-    def __init__(self, fpath, mode='rb', buffer_size=-1):
+    def __init__(self, fpath, mode='rb', buffer_size=-1, **kwargs):
         """Constructor for the Stream class.
 
         Args:
@@ -55,10 +60,17 @@ class Stream(object):
                 written. The default is 'rb'.
             buffer_size (int): Write buffer size. The objects will be buffered
                 before writing. No buffering will be made if buffer_size is -1.
+
+        Keyword args:
+            group_delimiter (boolean): indicate the end of a message group if
+                True by yielding a delimiter after reading each group.
+            delimiter_cls (class): delimiter class.
         """
         self._fd = gzip.open(fpath, mode)
         self._buffer_size = buffer_size
         self._write_buff = []
+        self._group_delim = kwargs.pop("group_delimiter", False)
+        self._delimiter = kwargs.pop("delimiter_cls", None.__class__)
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
@@ -107,6 +119,9 @@ class Stream(object):
                     raise EOFError('unexpected EOF.')
                 # Read an object from the object group.
                 yield self._fd.read(size)
+
+            if self._group_delim:
+                yield self._delimiter()
 
     def close(self):
         """Close the stream."""
