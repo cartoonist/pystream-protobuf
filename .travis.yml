@@ -10,7 +10,7 @@ before_install:
   - wget "https://github.com/google/protobuf/releases/download/v3.0.2/protobuf-python-3.0.2.tar.gz"
   - tar xzf protobuf-python-3.0.2.tar.gz
   - pushd protobuf-3.0.2 && ./configure --prefix=/usr && make && sudo make install && popd
-  - sudo apt-get update && sudo apt-get install pandoc
+  - wget "https://github.com/jgm/pandoc/releases/download/1.18/pandoc-1.18-1-amd64.deb" && sudo dpkg -i pandoc-1.18-1-amd64.deb
 
 # command to install dependencies
 install: "pip install tox-travis"
