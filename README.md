@@ -6,11 +6,11 @@
 
 # pyStream
 Python implementation of [stream library](https://github.com/vgteam/stream).
-Multiple protobuf messages can be written into a stream by using this
-library. It enables stream processing of protobuf messages and can be
-used for parsing all files encoded by stream library and writing
-protobuf instances into a file by the same encoding. Refer to the
-library [github page](https://github.com/vgteam/stream) for more
+Multiple protobuf messages can be written/read into/from a stream by
+using this library. It enables stream processing of protobuf messages
+and can be used for parsing all files encoded by stream library and
+writing protobuf instances into a file by the same encoding. Refer to
+the library [github page](https://github.com/vgteam/stream) for more
 information about formatting.
 
 ## Installation
