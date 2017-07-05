@@ -45,18 +45,12 @@ def read_alns2(fpath):
     Args:
         fpath (string): path of the file to be read.
     """
-    nof_groups = 0
-    istream = stream.open(fpath, 'rb', group_delimiter=True)
+    istream = stream.open(fpath, "rb")
     for data in istream:
-        if data is None:
-            nof_groups += 1
-            continue
         aln = vg_pb2.Alignment()
         aln.ParseFromString(data)
         yield aln
     istream.close()
-
-    assert nof_groups == 2
 
 
 def write_objs1(fpath, *objs_list):
