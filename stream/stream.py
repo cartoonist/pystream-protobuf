@@ -16,6 +16,33 @@ from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
+def parse(fpath, pb_cls):
+    """Parse a stream.
+
+    Args:
+        fpath (string): Path of the input stream.
+        pb_cls (protobuf.message.Message.__class__): The class object of
+            the protobuf message type encoded in the stream.
+    """
+    with open(fpath, 'rb') as istream:
+        for data in istream:
+            pb_obj = pb_cls()
+            pb_obj.ParseFromString(data)
+            yield pb_obj
+
+
+def write(fpath, *pb_objs, **kwargs):
+    """Write to a stream.
+
+    Args:
+        fpath (string): Path of the input stream.
+        pb_objs (*protobuf.message.Message): list of protobuf message objects to
+            be written.
+    """
+    with open(fpath, 'wb', **kwargs) as ostream:
+        ostream.write(*pb_objs)
+
+
 def open(fpath, mode='rb', **kwargs):  # pylint: disable=redefined-builtin
     """Open an stream."""
     return Stream(fpath, mode, **kwargs)
