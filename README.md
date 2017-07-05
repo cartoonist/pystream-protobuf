@@ -83,16 +83,3 @@ size of the buffer can be changed (from default value 0 --- no buffer)
 by passing it through keyword argumnet `buffer_size` when Stream class
 is constructed or a stream is opened. This value is the number of
 objects which should be written in a group.
-
-### Grouping message
-Messages can be grouped in varied size when writing to a stream by
-setting buffer size sufficiently large or infinity (-1) and calling
-`flush` method of Stream class whenever desired.
-
-### Group delimiter
-Group of objects can be separated by a delimiter of the choice (or by
-default `None`) when reading from a stream. Sometimes, it can help to
-identify the end of a group which is hidden from the library user by
-default. This feature can be enable by setting `group_delimiter` True
-when constructing a Stream instance or openning a stream. The delimiter
-class can also be specified by `delimiter_cls`.
