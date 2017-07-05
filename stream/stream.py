@@ -72,11 +72,11 @@ class Stream(object):
         """
         self._fd = gzip.open(fpath, mode)
         if mode.startswith('w'):
-            self._buffer_size = kwargs.pop("buffer_size", 0)
+            self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
         else:
-            self._group_delim = kwargs.pop("group_delimiter", False)
-            self._delimiter = kwargs.pop("delimiter_cls", None.__class__)
+            self._group_delim = kwargs.pop('group_delimiter', False)
+            self._delimiter = kwargs.pop('delimiter_cls', None.__class__)
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
