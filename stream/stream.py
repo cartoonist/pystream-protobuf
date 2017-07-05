@@ -98,7 +98,7 @@ class Stream(object):
             delimiter_cls (class): delimiter class.
         """
         self._fd = gzip.open(fpath, mode)
-        if mode.startswith('w'):
+        if not mode.startswith('r'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
         else:
@@ -156,6 +156,12 @@ class Stream(object):
             if self._group_delim:
                 yield self._delimiter()
 
+    def is_output(self):
+        """Check whether the stream is output stream or not."""
+        if hasattr(self, "_write_buff"):
+            return True
+        return False
+
     def close(self):
         """Close the stream."""
         self.flush()
@@ -186,6 +192,9 @@ class Stream(object):
 
     def flush(self):
         """Write down buffer to the file."""
+        if not self.is_output():
+            return
+
         count = len(self._write_buff)
         if count == 0:
             return
