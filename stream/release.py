@@ -12,25 +12,25 @@ DS_STABLE = 5
 DS_MATURE = 6
 DS_INACTIVE = 7
 DS_STRING = {
-    DS_PLANNING: "Development Status :: 1 - Planning",
-    DS_PREALPHA: "Development Status :: 2 - Pre-Alpha",
-    DS_ALPHA: "Development Status :: 3 - Alpha",
-    DS_BETA: "Development Status :: 4 - Beta",
-    DS_STABLE: "Development Status :: 5 - Production/Stable",
-    DS_MATURE: "Development Status :: 6 - Mature",
-    DS_INACTIVE: "Development Status :: 7 - Inactive"
+    DS_PLANNING: 'Development Status :: 1 - Planning',
+    DS_PREALPHA: 'Development Status :: 2 - Pre-Alpha',
+    DS_ALPHA: 'Development Status :: 3 - Alpha',
+    DS_BETA: 'Development Status :: 4 - Beta',
+    DS_STABLE: 'Development Status :: 5 - Production/Stable',
+    DS_MATURE: 'Development Status :: 6 - Mature',
+    DS_INACTIVE: 'Development Status :: 7 - Inactive'
 }
 ################################################################################
 
 # Package release information.
-__title__ = "stream"
-__description__ = "Python implementation of stream library"
-__author__ = "Ali Ghaffaari"
-__email__ = "ali.ghaffaari@mpi-inf.mpg.de"
-__license__ = "MIT"
+__title__ = 'stream'
+__description__ = 'Python implementation of stream library'
+__author__ = 'Ali Ghaffaari'
+__email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
+__license__ = 'MIT'
 
 # Release
-__version__ = "1.3.4"
+__version__ = '1.4.0'
 __status__ = DS_BETA
 
 # PyPI-related information

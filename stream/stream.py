@@ -16,10 +16,36 @@ from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
-def open(fpath, mode='rb',                   # pylint: disable=redefined-builtin
-         buffer_size=0, **kwargs):
+def parse(fpath, pb_cls):
+    """Parse a stream.
+
+    Args:
+        fpath (string): Path of the input stream.
+        pb_cls (protobuf.message.Message.__class__): The class object of
+            the protobuf message type encoded in the stream.
+    """
+    with open(fpath, 'rb') as istream:
+        for data in istream:
+            pb_obj = pb_cls()
+            pb_obj.ParseFromString(data)
+            yield pb_obj
+
+
+def write(fpath, *pb_objs, **kwargs):
+    """Write to a stream.
+
+    Args:
+        fpath (string): Path of the input stream.
+        pb_objs (*protobuf.message.Message): list of protobuf message objects to
+            be written.
+    """
+    with open(fpath, 'wb', **kwargs) as ostream:
+        ostream.write(*pb_objs)
+
+
+def open(fpath, mode='rb', **kwargs):  # pylint: disable=redefined-builtin
     """Open an stream."""
-    return Stream(fpath, mode, buffer_size, **kwargs)
+    return Stream(fpath, mode, **kwargs)
 
 
 class Stream(object):
@@ -27,15 +53,15 @@ class Stream(object):
 
     Read and write protocol buffer streams encoded by 'stream' library. Stream
     objects instantiated for reading by setting mode to 'rb' (input `Stream`s)
-    are iterable. So, protobuf objects can be obtained by iterate over the
+    are iterable. So, protobuf objects can be obtained by iterating over the
     Stream. Stream iterator yields protobuf encoded data, so it should be parsed
     by using proper methods in Google Protocol Buffer library (for example
     `ParseFromString()` method).
 
     In output `Stream`s (those are instantiated with 'w' mode), method `write()`
     groups the given list of protobuf objects and writes them into the stream in
-    the same format which is readable by any other parsers (refer to the stream
-    library documentation for further information).
+    the same format (refer to the stream library documentation for further
+    information).
 
     The stream should be closed after performing all stream operations. Streams
     can be also used by `with` statement just like files.
@@ -50,7 +76,7 @@ class Stream(object):
                         change (read-mode only).
         _delimiter:     the delimiter class (read-mode only).
     """
-    def __init__(self, fpath, mode='rb', buffer_size=0, **kwargs):
+    def __init__(self, fpath, mode='rb', **kwargs):
         """Constructor for the Stream class.
 
         Args:
@@ -58,6 +84,8 @@ class Stream(object):
             mode (string): The mode argument can be any of 'r', 'rb', 'a', 'ab',
                 'w', or 'wb', depending on whether the file will be read or
                 written. The default is 'rb'.
+
+        Keyword args:
             buffer_size (int): Write buffer size. The objects will be buffered
                 before writing. No buffering will be made if buffer_size is 0.
                 It means that size of the group will be determined by the size
@@ -65,17 +93,17 @@ class Stream(object):
                 to -1 means infinite buffer size. Method `flush` should be
                 called manually or by closing stream. All objects will be write
                 in one group upon `flush` or `close` events.
-
-        Keyword args:
             group_delimiter (boolean): indicate the end of a message group if
                 True by yielding a delimiter after reading each group.
             delimiter_cls (class): delimiter class.
         """
         self._fd = gzip.open(fpath, mode)
-        self._buffer_size = buffer_size
-        self._write_buff = []
-        self._group_delim = kwargs.pop("group_delimiter", False)
-        self._delimiter = kwargs.pop("delimiter_cls", None.__class__)
+        if mode.startswith('w'):
+            self._buffer_size = kwargs.pop('buffer_size', 0)
+            self._write_buff = []
+        else:
+            self._group_delim = kwargs.pop('group_delimiter', False)
+            self._delimiter = kwargs.pop('delimiter_cls', None.__class__)
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
