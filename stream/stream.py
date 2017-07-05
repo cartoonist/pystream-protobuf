@@ -44,10 +44,6 @@ class Stream(object):
         _buffer_size:   size of the buffer to write as a one group of messages
                         (write-mode only).
         _write_buff:    list of buffered messages for writing (write-mode only).
-        _group_delim:   if true it returns an instance of the `_delimiter` class
-                        after reading each group of messages to indicate a group
-                        change (read-mode only).
-        _delimiter:     the delimiter class (read-mode only).
     """
     def __init__(self, fpath, mode='rb', **kwargs):
         """Constructor for the Stream class.
@@ -66,17 +62,11 @@ class Stream(object):
                 to -1 means infinite buffer size. Method `flush` should be
                 called manually or by closing stream. All objects will be write
                 in one group upon `flush` or `close` events.
-            group_delimiter (boolean): indicate the end of a message group if
-                True by yielding a delimiter after reading each group.
-            delimiter_cls (class): delimiter class.
         """
         self._fd = gzip.open(fpath, mode)
         if mode.startswith('w'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
-        else:
-            self._group_delim = kwargs.pop('group_delimiter', False)
-            self._delimiter = kwargs.pop('delimiter_cls', None.__class__)
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
@@ -125,9 +115,6 @@ class Stream(object):
                     raise EOFError('unexpected EOF.')
                 # Read an object from the object group.
                 yield self._fd.read(size)
-
-            if self._group_delim:
-                yield self._delimiter()
 
     def close(self):
         """Close the stream."""
