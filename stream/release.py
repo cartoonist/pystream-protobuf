@@ -30,7 +30,7 @@ __email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
 __license__ = 'MIT'
 
 # Release
-__version__ = '1.3.4'
+__version__ = '1.4.0'
 __status__ = DS_BETA
 
 # PyPI-related information
