@@ -16,6 +16,33 @@ from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
 from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
 
 
+def parse(fpath, pb_cls):
+    """Parse a stream.
+
+    Args:
+        fpath (string): Path of the input stream.
+        pb_cls (protobuf.message.Message.__class__): The class object of
+            the protobuf message type encoded in the stream.
+    """
+    with open(fpath, 'rb') as istream:
+        for data in istream:
+            pb_obj = pb_cls()
+            pb_obj.ParseFromString(data)
+            yield pb_obj
+
+
+def dump(fpath, *pb_objs, **kwargs):
+    """Write to a stream.
+
+    Args:
+        fpath (string): Path of the input stream.
+        pb_objs (*protobuf.message.Message): list of protobuf message objects to
+            be written.
+    """
+    with open(fpath, 'wb', **kwargs) as ostream:
+        ostream.write(*pb_objs)
+
+
 def open(fpath, mode='rb', **kwargs):  # pylint: disable=redefined-builtin
     """Open an stream."""
     return Stream(fpath, mode, **kwargs)
@@ -64,7 +91,7 @@ class Stream(object):
                 in one group upon `flush` or `close` events.
         """
         self._fd = gzip.open(fpath, mode)
-        if mode.startswith('w'):
+        if not mode.startswith('r'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
 
@@ -116,6 +143,12 @@ class Stream(object):
                 # Read an object from the object group.
                 yield self._fd.read(size)
 
+    def is_output(self):
+        """Check whether the stream is output stream or not."""
+        if hasattr(self, '_write_buff'):
+            return True
+        return False
+
     def close(self):
         """Close the stream."""
         self.flush()
@@ -146,6 +179,9 @@ class Stream(object):
 
     def flush(self):
         """Write down buffer to the file."""
+        if not self.is_output():
+            return
+
         count = len(self._write_buff)
         if count == 0:
             return
