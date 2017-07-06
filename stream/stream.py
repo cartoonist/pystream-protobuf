@@ -158,7 +158,7 @@ class Stream(object):
 
     def is_output(self):
         """Check whether the stream is output stream or not."""
-        if hasattr(self, "_write_buff"):
+        if hasattr(self, '_write_buff'):
             return True
         return False
 

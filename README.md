@@ -28,7 +28,7 @@ It yields the protobuf objects stored in the file:
 import stream
 import vg_pb2
 
-alns = [a for a in stream.parse("test.gam", vg_pb2.Alignment)]
+alns = [a for a in stream.parse('test.gam', vg_pb2.Alignment)]
 ```
 
 Or use lower-level method `open` in order to have more control in
@@ -39,7 +39,7 @@ import stream
 import vg_pb2
 
 alns_list = []
-with stream.open("test.gam", "rb") as istream:
+with stream.open('test.gam', 'rb') as istream:
     for data in istream:
         aln = vg_pb2.Alignment()
         aln.ParseFromString(data)
@@ -54,7 +54,7 @@ import stream
 import vg_pb2
 
 alns_list = []
-istream = stream.open("test.gam", "rb")
+istream = stream.open('test.gam', 'rb')
 for data in istream:
     aln = vg_pb2.Alignment()
     aln.ParseFromString(data)
@@ -68,7 +68,7 @@ into a file (here a GAM file):
 ```python
 import stream
 
-stream.dump("test.gam", *objects_list, buffer_size=10)
+stream.dump('test.gam', *objects_list, buffer_size=10)
 ```
 
 Or using `open` method for lower-level control -- here, appending for
@@ -77,7 +77,7 @@ example:
 ```python
 import stream
 
-with stream.open("test.gam", "ab") as ostream:
+with stream.open('test.gam', 'ab') as ostream:
     ostream.write(*objects_list)
     ostream.write(*another_objects_list)
 ```
@@ -88,7 +88,7 @@ calling `close` method explicitly:
 ```python
 import stream
 
-ostream = stream.open("test.gam", "wb")
+ostream = stream.open('test.gam', 'wb')
 ostream.write(*objects_list)
 ostream.write(*another_objects_list)
 ostream.close()
