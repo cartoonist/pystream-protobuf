@@ -28,6 +28,16 @@ It yields the protobuf objects stored in the file:
 import stream
 import vg_pb2
 
+alns = [a for a in stream.parse("test.gam", vg_pb2.Alignment)]
+```
+
+Or use lower-level method `open` in order to have more control in
+opening the stream and reading data:
+
+```python
+import stream
+import vg_pb2
+
 alns_list = []
 with stream.open("test.gam", "rb") as istream:
     for data in istream:
@@ -36,7 +46,8 @@ with stream.open("test.gam", "rb") as istream:
         alns_list.append(aln)
 ```
 
-Or
+This example also does the same without using `with` statement by
+calling `close` method explicitly after reading the data:
 
 ```python
 import stream
@@ -57,12 +68,22 @@ into a file (here a GAM file):
 ```python
 import stream
 
-with stream.open("test.gam", "wb") as ostream:
+stream.dump("test.gam", *objects_list, buffer_size=10)
+```
+
+Or using `open` method for lower-level control -- here, appending for
+example:
+
+```python
+import stream
+
+with stream.open("test.gam", "ab") as ostream:
     ostream.write(*objects_list)
     ostream.write(*another_objects_list)
 ```
 
-Or
+Or without using `with` statement where the data is written after
+calling `close` method explicitly:
 
 ```python
 import stream
