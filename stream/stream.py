@@ -31,7 +31,7 @@ def parse(fpath, pb_cls):
             yield pb_obj
 
 
-def write(fpath, *pb_objs, **kwargs):
+def dump(fpath, *pb_objs, **kwargs):
     """Write to a stream.
 
     Args:
