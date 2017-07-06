@@ -2,7 +2,7 @@
 
 """
     stream
-    ~~~~~~~~
+    ~~~~~~
 
     Python implementation of stream library. See README file for more
     information.

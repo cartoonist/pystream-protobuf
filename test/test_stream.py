@@ -92,16 +92,13 @@ def write_objs2(fpath, *objs_list):
 
 
 def test_low():
-    """Run all test cases."""
+    """Run low-level methods tests."""
     # Files
     testdir = os.path.dirname(os.path.realpath(__file__))
     gamfile = os.path.join(testdir, 'sample_reads.gam')
     gamfile_nof_alns = 12
     rw1_gamfile = os.path.join(testdir, 'rw1_sample_reads.gam')
     rw2_gamfile = os.path.join(testdir, 'rw2_sample_reads.gam')
-    # GUM file == Unzipped GAM file
-    rw1_gumfile = os.path.join(testdir, 'rw1_sample_reads.gum')
-    rw2_gumfile = os.path.join(testdir, 'rw2_sample_reads.gum')
 
     # Read a sample file.
     alns = [a for a in read_alns1(gamfile)]
@@ -114,33 +111,21 @@ def test_low():
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
     write_objs2(rw2_gamfile, *re_alns)
-    # Unzip two generated files.
-    with gzip.open(rw1_gamfile, 'rb') as gfp, \
-            open(rw1_gumfile, 'wb') as ufp:
-        ufp.write(gfp.read())
-    with gzip.open(rw2_gamfile, 'rb') as gfp, \
-            open(rw2_gumfile, 'wb') as ufp:
-        ufp.write(gfp.read())
     # Check whether the two generated files have the same the content.
-    assert filecmp.cmp(rw1_gumfile, rw2_gumfile)
-    # Delete the generated files.
+    assert compare(rw1_gamfile, rw2_gamfile)
+    # Remove the generated files.
     os.remove(rw1_gamfile)
-    os.remove(rw1_gumfile)
     os.remove(rw2_gamfile)
-    os.remove(rw2_gumfile)
 
 
 def test_high():
-    """Run all test cases."""
+    """Run high-level methods tests."""
     # Files
     testdir = os.path.dirname(os.path.realpath(__file__))
     gamfile = os.path.join(testdir, 'sample_reads.gam')
     gamfile_nof_alns = 12
     rw1_gamfile = os.path.join(testdir, 'rw1_sample_reads.gam')
     rw2_gamfile = os.path.join(testdir, 'rw2_sample_reads.gam')
-    # GUM file == Unzipped GAM file
-    rw1_gumfile = os.path.join(testdir, 'rw1_sample_reads.gum')
-    rw2_gumfile = os.path.join(testdir, 'rw2_sample_reads.gum')
 
     # Read a sample file.
     alns = [a for a in stream.parse(gamfile, vg_pb2.Alignment)]
@@ -153,20 +138,40 @@ def test_high():
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
     write_objs2(rw2_gamfile, *re_alns)
-    # Unzip two generated files.
-    with gzip.open(rw1_gamfile, 'rb') as gfp, \
-            open(rw1_gumfile, 'wb') as ufp:
-        ufp.write(gfp.read())
-    with gzip.open(rw2_gamfile, 'rb') as gfp, \
-            open(rw2_gumfile, 'wb') as ufp:
-        ufp.write(gfp.read())
     # Check whether the two generated files have the same the content.
-    assert filecmp.cmp(rw1_gumfile, rw2_gumfile)
-    # Delete the generated files.
+    assert compare(rw1_gamfile, rw2_gamfile)
+    # Remove the generated files.
     os.remove(rw1_gamfile)
-    os.remove(rw1_gumfile)
     os.remove(rw2_gamfile)
-    os.remove(rw2_gumfile)
+
+
+def compare(first, second):
+    """Compare two stream files.
+
+    Since the stream files are gzipped and the file name is included in the
+    compressed file, they need to be decompressed first before comparing their
+    contents.
+
+    Args:
+        first (string): path to the first stream file.
+        second (string): path to the second stream file.
+    """
+    ungz_first = '.ungz'.join(os.path.splitext(first))
+    ungz_second = '.ungz'.join(os.path.splitext(second))
+
+    # Unzip first file.
+    with gzip.open(first, 'rb') as gfp, open(ungz_first, 'wb') as ufp:
+        ufp.write(gfp.read())
+    # Unzip second file.
+    with gzip.open(second, 'rb') as gfp, open(ungz_second, 'wb') as ufp:
+        ufp.write(gfp.read())
+    # Compare two unzipped files.
+    result = filecmp.cmp(ungz_first, ungz_second)
+    # Remove decompressed files.
+    os.remove(ungz_first)
+    os.remove(ungz_second)
+
+    return result
 
 
 if __name__ == '__main__':
