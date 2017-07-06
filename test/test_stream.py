@@ -146,7 +146,7 @@ def test_high():
     alns = [a for a in stream.parse(gamfile, vg_pb2.Alignment)]
     assert len(alns) == gamfile_nof_alns
     # Rewrite it into a new file in two groups of 6 objects.
-    stream.write(rw1_gamfile, *alns, buffer_size=len(alns)//2)
+    stream.dump(rw1_gamfile, *alns, buffer_size=len(alns)//2)
     # Read the rewritten file.
     re_alns = [a for a in read_alns2(rw1_gamfile)]
     # Check the length of the objects storing in both files.
