@@ -30,7 +30,7 @@ __email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
 __license__ = 'MIT'
 
 # Release
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 __status__ = DS_BETA
 
 # PyPI-related information
@@ -50,8 +50,12 @@ __classifiers__ = [
     # Intended Audience and Topic
     'Intended Audience :: Developers',
 ]
-__requires__ = ['protobuf>=3.0.0']
+__requires__ = ['protobuf>=3.0.0', 'click>=6.0.0']
 __tests_require__ = []
 __extras_require__ = {
     'test': ['nose'],
 }
+__entry_points__ = '''
+[console_scripts]
+varint=stream.varint:cli
+'''
