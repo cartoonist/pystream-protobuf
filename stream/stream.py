@@ -12,8 +12,8 @@
 
 import gzip
 
-from google.protobuf.internal.decoder import _DecodeVarint as varintDecoder
-from google.protobuf.internal.encoder import _EncodeVarint as varintEncoder
+from google.protobuf.internal.decoder import _DecodeVarint as decodeVarint
+from google.protobuf.internal.encoder import _EncodeVarint as encodeVarint
 
 
 def parse(fpath, pb_cls):
@@ -36,8 +36,8 @@ def dump(fpath, *pb_objs, **kwargs):
 
     Args:
         fpath (string): Path of the input stream.
-        pb_objs (*protobuf.message.Message): list of protobuf message objects to
-            be written.
+        pb_objs (*protobuf.message.Message): list of protobuf message objects
+            to be written.
     """
     with open(fpath, 'wb', **kwargs) as ostream:
         ostream.write(*pb_objs)
@@ -54,14 +54,14 @@ class Stream(object):
     Read and write protocol buffer streams encoded by 'stream' library. Stream
     objects instantiated for reading by setting mode to 'rb' (input `Stream`s)
     are iterable. So, protobuf objects can be obtained by iterating over the
-    Stream. Stream iterator yields protobuf encoded data, so it should be parsed
-    by using proper methods in Google Protocol Buffer library (for example
-    `ParseFromString()` method).
+    Stream. Stream iterator yields protobuf encoded data, so it should be
+    parsed by using proper methods in Google Protocol Buffer library (for
+    example `ParseFromString()` method).
 
-    In output `Stream`s (those are instantiated with 'w' mode), method `write()`
-    groups the given list of protobuf objects and writes them into the stream in
-    the same format (refer to the stream library documentation for further
-    information).
+    In output `Stream`s (those are instantiated with 'w' mode), method
+    `write()` groups the given list of protobuf objects and writes them into
+    the stream in the same format (refer to the stream library documentation
+    for further information).
 
     The stream should be closed after performing all stream operations. Streams
     can be also used by `with` statement just like files.
@@ -70,10 +70,10 @@ class Stream(object):
         _fd:            file object.
         _buffer_size:   size of the buffer to write as a one group of messages
                         (write-mode only).
-        _write_buff:    list of buffered messages for writing (write-mode only).
-        _group_delim:   if true it returns an instance of the `_delimiter` class
-                        after reading each group of messages to indicate a group
-                        change (read-mode only).
+        _write_buff:    list of buffered messages for writing (write-mode only)
+        _group_delim:   if true it returns an instance of the `_delimiter`
+                        class after reading each group of messages to indicate
+                        a group change (read-mode only).
         _delimiter:     the delimiter class (read-mode only).
     """
     def __init__(self, fpath, mode='rb', **kwargs):
@@ -81,9 +81,9 @@ class Stream(object):
 
         Args:
             fpath (string): Path of the working file.
-            mode (string): The mode argument can be any of 'r', 'rb', 'a', 'ab',
-                'w', or 'wb', depending on whether the file will be read or
-                written. The default is 'rb'.
+            mode (string): The mode argument can be any of 'r', 'rb', 'a',
+                'ab', 'w', or 'wb', depending on whether the file will be read
+                or written. The default is 'rb'.
 
         Keyword args:
             buffer_size (int): Write buffer size. The objects will be buffered
@@ -122,7 +122,8 @@ class Stream(object):
         return self._get_objs()
 
     def _read_varint(self):
-        """Read a varint from file, parse it, and return the decoded integer."""
+        """Read a varint from file, parse it, and return the decoded integer.
+        """
         buff = self._fd.read(1)
         if buff == b'':
             return 0
@@ -133,7 +134,7 @@ class Stream(object):
                 raise EOFError('unexpected EOF.')
             buff += new_byte
 
-        varint, _ = varintDecoder(buff, 0)
+        varint, _ = decodeVarint(buff, 0)
 
         return varint
 
@@ -169,8 +170,8 @@ class Stream(object):
 
     def write(self, *pb2_obj):
         """Write a group of one or more protobuf objects to the file. Multiple
-        object groups can be written by calling this method several times before
-        closing stream or exiting the runtime context.
+        object groups can be written by calling this method several times
+        before closing stream or exiting the runtime context.
 
         The input protobuf objects get buffered and will be written down when
         the number of buffered objects exceed the `self._buffer_size`.
@@ -199,11 +200,11 @@ class Stream(object):
         if count == 0:
             return
 
-        varintEncoder(self._fd.write, count)
+        encodeVarint(self._fd.write, count, True)
 
         for obj in self._write_buff:
             obj_str = obj.SerializeToString()
-            varintEncoder(self._fd.write, len(obj_str))
+            encodeVarint(self._fd.write, len(obj_str), True)
             self._fd.write(obj_str)
 
         self._write_buff = []

@@ -2,7 +2,7 @@
 
 """Include release information of the 'pystream-protobuf' package."""
 
-# CONSTANTS ####################################################################
+# CONSTANTS ###################################################################
 # Development statuses:
 DS_PLANNING = 1
 DS_PREALPHA = 2
@@ -20,7 +20,7 @@ DS_STRING = {
     DS_MATURE: 'Development Status :: 6 - Mature',
     DS_INACTIVE: 'Development Status :: 7 - Inactive'
 }
-################################################################################
+###############################################################################
 
 # Package release information.
 __title__ = 'stream'
@@ -30,7 +30,7 @@ __email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
 __license__ = 'MIT'
 
 # Release
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 __status__ = DS_BETA
 
 # PyPI-related information
@@ -50,7 +50,7 @@ __classifiers__ = [
     # Intended Audience and Topic
     'Intended Audience :: Developers',
 ]
-__requires__ = ['protobuf>=3.0.0', 'click>=6.0.0']
+__requires__ = ['protobuf>=3.4.0', 'click>=6.0.0']
 __tests_require__ = []
 __extras_require__ = {
     'test': ['nose'],
