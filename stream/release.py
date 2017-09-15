@@ -50,7 +50,7 @@ __classifiers__ = [
     # Intended Audience and Topic
     'Intended Audience :: Developers',
 ]
-__requires__ = ['protobuf>=3.0.0', 'click>=6.0.0']
+__requires__ = ['protobuf>=3.4.0', 'click>=6.0.0']
 __tests_require__ = []
 __extras_require__ = {
     'test': ['nose'],

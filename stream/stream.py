@@ -199,11 +199,11 @@ class Stream(object):
         if count == 0:
             return
 
-        varintEncoder(self._fd.write, count)
+        varintEncoder(self._fd.write, count, True)
 
         for obj in self._write_buff:
             obj_str = obj.SerializeToString()
-            varintEncoder(self._fd.write, len(obj_str))
+            varintEncoder(self._fd.write, len(obj_str), True)
             self._fd.write(obj_str)
 
         self._write_buff = []

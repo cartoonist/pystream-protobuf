@@ -44,7 +44,7 @@ def encode(x):
     Args:
         x (int):  the integer to be encoded.
     """
-    encodeVarint(sys.stdout.buffer.write, x)
+    encodeVarint(sys.stdout.buffer.write, x, True)
 
 
 def decode(input_file):
