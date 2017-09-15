@@ -2,7 +2,7 @@
 
 """Include release information of the 'pystream-protobuf' package."""
 
-# CONSTANTS ####################################################################
+# CONSTANTS ###################################################################
 # Development statuses:
 DS_PLANNING = 1
 DS_PREALPHA = 2
@@ -20,7 +20,7 @@ DS_STRING = {
     DS_MATURE: 'Development Status :: 6 - Mature',
     DS_INACTIVE: 'Development Status :: 7 - Inactive'
 }
-################################################################################
+###############################################################################
 
 # Package release information.
 __title__ = 'stream'
