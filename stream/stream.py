@@ -103,7 +103,7 @@ class Stream(object):
             self._write_buff = []
         else:
             self._group_delim = kwargs.pop('group_delimiter', False)
-            self._delimiter = kwargs.pop('delimiter_cls', None.__class__)
+            self._delimiter = kwargs.pop('delimiter_cls', None)
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
@@ -128,7 +128,7 @@ class Stream(object):
         if buff == b'':
             return 0
 
-        while (buff[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
+        while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
             new_byte = self._fd.read(1)
             if new_byte == b'':
                 raise EOFError('unexpected EOF.')
@@ -155,7 +155,7 @@ class Stream(object):
                 yield self._fd.read(size)
 
             if self._group_delim:
-                yield self._delimiter()
+                yield self._delimiter() if self._delimiter is not None else None
 
     def is_output(self):
         """Check whether the stream is output stream or not."""
