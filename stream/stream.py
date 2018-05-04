@@ -128,7 +128,7 @@ class Stream(object):
         if buff == b'':
             return 0
 
-        while (buff[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
+        while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
             new_byte = self._fd.read(1)
             if new_byte == b'':
                 raise EOFError('unexpected EOF.')
