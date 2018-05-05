@@ -18,7 +18,7 @@ from .context import stream
 from . import vg_pb2
 
 
-def read_alns1(fpath):
+def read_alns1(fpath, gzip=True):
     """Read protobuf objects from a file by using `with` statement.
 
     Here, as an example, the file is a GAM file containing Alignment messages
@@ -27,14 +27,14 @@ def read_alns1(fpath):
     Args:
         fpath (string): path of the file to be read.
     """
-    with stream.open(fpath, 'rb') as istream:
+    with stream.open(fpath, 'rb', gzip=gzip) as istream:
         for data in istream:
             aln = vg_pb2.Alignment()
             aln.ParseFromString(data)
             yield aln
 
 
-def read_alns2(fpath):
+def read_alns2(fpath, gzip=True):
     """Read protobuf objects from a file without using `with` statement.
 
     Here, as an example, the file is a GAM file containing Alignment messages
@@ -46,7 +46,7 @@ def read_alns2(fpath):
         fpath (string): path of the file to be read.
     """
     nof_groups = 0
-    istream = stream.open(fpath, 'rb', group_delimiter=True)
+    istream = stream.open(fpath, 'rb', group_delimiter=True, gzip=gzip)
     for data in istream:
         if data is None:
             nof_groups += 1
@@ -59,7 +59,7 @@ def read_alns2(fpath):
     assert nof_groups == 2
 
 
-def write_objs1(fpath, *objs_list):
+def write_objs1(fpath, *objs_list, **kwds):
     """Write protobuf message objects into the file by using `with` statement.
 
     It writes half of them in one group, and then the other half in another one.
@@ -68,13 +68,13 @@ def write_objs1(fpath, *objs_list):
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    with stream.open(fpath, 'wb') as ostream:
+    with stream.open(fpath, 'wb', gzip=kwds.get('gzip', True)) as ostream:
         length = len(objs_list)
         ostream.write(*objs_list[:length//2])
         ostream.write(*objs_list[length//2:])
 
 
-def write_objs2(fpath, *objs_list):
+def write_objs2(fpath, *objs_list, **kwds):
     """Write protobuf message objects into the file w/o using `with` statement.
 
     It writes half of them in one group, and then the other half in another one
@@ -86,12 +86,12 @@ def write_objs2(fpath, *objs_list):
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2))
+    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2), gzip=kwds.get('gzip', True))
     ostream.write(*objs_list)
     ostream.close()
 
 
-def test_low():
+def test_low(gzip=True):
     """Run low-level methods tests."""
     # Files
     testdir = os.path.dirname(os.path.realpath(__file__))
@@ -104,21 +104,21 @@ def test_low():
     alns = [a for a in read_alns1(gamfile)]
     assert len(alns) == gamfile_nof_alns
     # Rewrite it into a new file in two groups of 6 objects.
-    write_objs1(rw1_gamfile, *alns)
+    write_objs1(rw1_gamfile, *alns, gzip=gzip)
     # Read the rewritten file.
-    re_alns = [a for a in read_alns2(rw1_gamfile)]
+    re_alns = [a for a in read_alns2(rw1_gamfile, gzip=gzip)]
     # Check the length of the objects storing in both files.
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
-    write_objs2(rw2_gamfile, *re_alns)
+    write_objs2(rw2_gamfile, *re_alns, gzip=gzip)
     # Check whether the two generated files have the same the content.
-    assert compare(rw1_gamfile, rw2_gamfile)
+    assert compare(rw1_gamfile, rw2_gamfile, gzip=gzip)
     # Remove the generated files.
     os.remove(rw1_gamfile)
     os.remove(rw2_gamfile)
 
 
-def test_high():
+def test_high(gzip=True):
     """Run high-level methods tests."""
     # Files
     testdir = os.path.dirname(os.path.realpath(__file__))
@@ -131,21 +131,29 @@ def test_high():
     alns = [a for a in stream.parse(gamfile, vg_pb2.Alignment)]
     assert len(alns) == gamfile_nof_alns
     # Rewrite it into a new file in two groups of 6 objects.
-    stream.dump(rw1_gamfile, *alns, buffer_size=len(alns)//2)
+    stream.dump(rw1_gamfile, *alns, buffer_size=len(alns)//2, gzip=gzip)
     # Read the rewritten file.
-    re_alns = [a for a in read_alns2(rw1_gamfile)]
+    re_alns = [a for a in read_alns2(rw1_gamfile, gzip=gzip)]
     # Check the length of the objects storing in both files.
     assert len(alns) == len(re_alns)
     # Rewrite again the read data.
-    write_objs2(rw2_gamfile, *re_alns)
+    write_objs2(rw2_gamfile, *re_alns, gzip=gzip)
     # Check whether the two generated files have the same the content.
-    assert compare(rw1_gamfile, rw2_gamfile)
+    assert compare(rw1_gamfile, rw2_gamfile, gzip=gzip)
     # Remove the generated files.
     os.remove(rw1_gamfile)
     os.remove(rw2_gamfile)
 
 
-def compare(first, second):
+def test_low_no_gzip():
+    return test_low(gzip=False)
+
+
+def test_high_no_gzip():
+    return test_high(gzip=False)
+
+
+def compare_gzipped(first, second):
     """Compare two stream files.
 
     Since the stream files are gzipped and the file name is included in the
@@ -174,6 +182,16 @@ def compare(first, second):
     return result
 
 
+def compare(first, second, gzip=True):
+
+    if gzip:
+        return compare_gzipped(first, second)
+    else:
+        return filecmp.cmp(first, second)
+
+
 if __name__ == '__main__':
-    test_low()
-    test_high()
+    test_low(gzip=True)
+    test_low(gzip=False)
+    test_high(gzip=True)
+    test_high(gzip=False)

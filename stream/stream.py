@@ -16,7 +16,7 @@ from google.protobuf.internal.decoder import _DecodeVarint as decodeVarint
 from google.protobuf.internal.encoder import _EncodeVarint as encodeVarint
 
 
-def parse(fpath, pb_cls):
+def parse(fpath, pb_cls, gzip=True):
     """Parse a stream.
 
     Args:
@@ -24,7 +24,7 @@ def parse(fpath, pb_cls):
         pb_cls (protobuf.message.Message.__class__): The class object of
             the protobuf message type encoded in the stream.
     """
-    with open(fpath, 'rb') as istream:
+    with open(fpath, 'rb', gzip=gzip) as istream:
         for data in istream:
             pb_obj = pb_cls()
             pb_obj.ParseFromString(data)
@@ -97,7 +97,11 @@ class Stream(object):
                 True by yielding a delimiter after reading each group.
             delimiter_cls (class): delimiter class.
         """
-        self._fd = gzip.open(fpath, mode)
+        if kwargs.get('gzip', True):
+            self._fd = gzip.open(fpath, mode)
+        else:
+            import builtins
+            self._fd = builtins.open(fpath, mode)
         if not mode.startswith('r'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
