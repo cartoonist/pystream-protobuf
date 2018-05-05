@@ -4,7 +4,6 @@ python:
   - "2.7"
   - "3.5"
   - "3.6"
-  - "3.7"
 
 # build and install protocol buffer compiler from the source code.
 before_install:
