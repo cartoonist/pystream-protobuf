@@ -56,8 +56,9 @@ __classifiers__ = [
 __requires__ = ['protobuf>=3.4.0', 'click>=6.0.0']
 __tests_require__ = []
 __extras_require__ = {
-    'test': ['nose'],
+    'test': ['nose>=1.0', 'coverage'],
 }
+__setup_requires__ = ['nose>=1.0', 'coverage']
 __entry_points__ = '''
 [console_scripts]
 varint=stream.varint:cli

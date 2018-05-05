@@ -1,5 +1,4 @@
 PIP=pip
-TEST=nosetests
 TESTREPO=pypitest
 MAINREPO=pypi
 
@@ -8,14 +7,14 @@ vpath %_pb2.py test/
 # Specifying phony targets
 .PHONY: init test dist-test dist
 
-init:
+init: vg_pb2.py
 	${PIP} install -r requirements.txt
 
 vg_pb2.py:
 	protoc -I=test/ --python_out=test/ test/vg.proto
 
-test: vg_pb2.py
-	${TEST}
+test: init
+	python setup.py nosetests
 
 dist-test:
 	python setup.py register -r ${TESTREPO}

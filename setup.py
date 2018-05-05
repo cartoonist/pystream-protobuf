@@ -58,5 +58,6 @@ setup(
     install_requires=_RELEASE_INFO['__requires__'],
     tests_require=_RELEASE_INFO['__tests_require__'],
     extras_require=_RELEASE_INFO['__extras_require__'],
+    setup_requires=_RELEASE_INFO['__setup_requires__'],
     entry_points=_RELEASE_INFO['__entry_points__'],
 )
