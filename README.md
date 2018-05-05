@@ -13,9 +13,6 @@ instances into a file by the same encoding. Refer to the library
 [GitHub page](https://github.com/vgteam/stream) for more information about
 formatting.
 
-## Requirements
-- Google protobuf compiler (>=3.0.2)
-
 ## Installation
 You can install pyStream using `pip`:
 
@@ -24,9 +21,9 @@ You can install pyStream using `pip`:
 ## Usage
 
 ### Reading
-Here's a sample code to read a file (so-called GAM file) containing a set of
-protobuf messages (here is a set of [VG](https://github.com/vgteam/vg)'s
-Alignment objects (defined [here](https://github.com/vgteam/vg/blob/master/src/vg.proto)).
+Here is a sample code to read a file containing a set of protobuf messages (here
+is a set of [VG](https://github.com/vgteam/vg)'s Alignment objects, so-called
+GAM file, defined [here](https://github.com/vgteam/vg/blob/master/src/vg.proto)).
 It yields the protobuf objects stored in the file:
 
 ```python
@@ -36,8 +33,8 @@ import vg_pb2
 alns = [a for a in stream.parse('test.gam', vg_pb2.Alignment)]
 ```
 
-Or use lower-level method `open` in order to have more control over opening the
-stream and reading data:
+Or the lower-level method `open` can be used in order to have more control over
+opening the stream and reading data:
 
 ```python
 import stream
@@ -51,7 +48,7 @@ with stream.open('test.gam', 'rb') as istream:
         alns_list.append(aln)
 ```
 
-The stream can be closed by calling `close` method explicitly, in case which the
+The stream can be closed by calling `close` method explicitly, in which case the
 stream is opened without using `with` statement (see more examples in the test
 package).
 
@@ -107,13 +104,14 @@ In case, you work with the source code and need to build the package:
 
     python setup.py build
 
-The proto file in test module required to be compiled before running test cases.
-To do so, it is required to have Google Protobuf compiler (>=3.0.2) installed.
-If you have `protoc` installed, run:
+The proto file in the test module required to be compiled before running test
+cases. To do so, it is required to have Google protobuf compiler (>=3.0.2)
+installed. After installing protobuf compiler, run:
 
     make init
 
-Then, use `nosetests` command of the setup script to execute test cases:
+to compile proto files required for test module. Then, use `nosetests` command
+of the setup script to execute test cases:
 
     python setup.py nosetests
 
