@@ -96,6 +96,8 @@ class Stream(object):
             group_delimiter (boolean): indicate the end of a message group if
                 True by yielding a delimiter after reading each group.
             delimiter_cls (class): delimiter class.
+            gzip (bool): Whether or not to use gzip compression on the given
+                file. (default is True)
         """
         if kwargs.get('gzip', True):
             self._fd = gzip.open(fpath, mode)

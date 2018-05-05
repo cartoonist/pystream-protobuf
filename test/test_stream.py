@@ -59,7 +59,7 @@ def read_alns2(fpath, gzip=True):
     assert nof_groups == 2
 
 
-def write_objs1(fpath, *objs_list, **kwds):
+def write_objs1(fpath, *objs_list, **kwargs):
     """Write protobuf message objects into the file by using `with` statement.
 
     It writes half of them in one group, and then the other half in another one.
@@ -68,13 +68,13 @@ def write_objs1(fpath, *objs_list, **kwds):
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    with stream.open(fpath, 'wb', gzip=kwds.get('gzip', True)) as ostream:
+    with stream.open(fpath, 'wb', gzip=kwargs.get('gzip', True)) as ostream:
         length = len(objs_list)
         ostream.write(*objs_list[:length//2])
         ostream.write(*objs_list[length//2:])
 
 
-def write_objs2(fpath, *objs_list, **kwds):
+def write_objs2(fpath, *objs_list, **kwargs):
     """Write protobuf message objects into the file w/o using `with` statement.
 
     It writes half of them in one group, and then the other half in another one
@@ -86,7 +86,7 @@ def write_objs2(fpath, *objs_list, **kwds):
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2), gzip=kwds.get('gzip', True))
+    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2), gzip=kwargs.get('gzip', True))
     ostream.write(*objs_list)
     ostream.close()
 
