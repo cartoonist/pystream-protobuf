@@ -78,6 +78,11 @@ particularly when the stream is opened without using `with` statement.
 
 ## More features
 
+### Optional GZip Compression
+The streams encoded by [Stream library](https://github.com/vgteam/stream) is
+GZip compressed. The compression can be disabled by passing `gzip=False` when
+opening an stream.
+
 ### Buffered write
 By default, all protobuf message objects provided on each call are written in a
 group of messages (see [Stream library](https://github.com/vgteam/stream) for
