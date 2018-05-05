@@ -10,17 +10,9 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from __future__ import print_function
 import os
-import sys
 import codecs
-
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    print("Error: 'setuptools' is not installed which is required.",
-          file=sys.stderr)
-    exit(1)
+from setuptools import setup, find_packages
 
 
 _HERE = os.path.abspath(os.path.dirname(__file__))

@@ -1,14 +1,11 @@
-PIP=pip
-TESTREPO=pypitest
-MAINREPO=pypi
+TESTPYPI=testpypi
 
 vpath %_pb2.py test/
 
 # Specifying phony targets
-.PHONY: init test dist-test dist
+.PHONY: init test build package dist-test dist dist-clean
 
 init: vg_pb2.py
-	${PIP} install -r requirements.txt
 
 vg_pb2.py:
 	protoc -I=test/ --python_out=test/ test/vg.proto
@@ -16,10 +13,18 @@ vg_pb2.py:
 test: init
 	python setup.py nosetests
 
-dist-test:
-	python setup.py register -r ${TESTREPO}
-	python setup.py sdist upload -r ${TESTREPO}
+build:
+	python setup.py build
 
-dist:
-	python setup.py register -r ${MAINREPO}
-	python setup.py sdist upload -r ${MAINREPO}
+package:
+	python setup.py sdist
+	python setup.py bdist_wheel
+
+dist: package
+	twine upload dist/*
+
+dist-test: package
+	twine upload --repository ${TESTPYPI} dist/*
+
+dist-clean:
+	rm -rf dist/ build/ *.egg-info

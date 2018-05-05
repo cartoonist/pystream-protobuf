@@ -34,7 +34,7 @@ __version__ = '1.4.5'
 __status__ = DS_BETA
 
 # PyPI-related information
-__keywords__ = ['protobuf', 'stream', 'protocol buffer']
+__keywords__ = 'stream protocol buffer protobuf'
 __classifiers__ = [
     # Development status
     DS_STRING[__status__],
