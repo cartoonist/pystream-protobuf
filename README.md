@@ -78,7 +78,7 @@ particularly when the stream is opened without using `with` statement.
 
 ## More features
 
-### Optional GZip Compression
+### Optional GZip compression
 The streams encoded by [Stream library](https://github.com/vgteam/stream) is
 GZip compressed. The compression can be disabled by passing `gzip=False` when
 opening an stream.
