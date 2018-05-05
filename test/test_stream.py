@@ -86,7 +86,8 @@ def write_objs2(fpath, *objs_list, **kwargs):
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2), gzip=kwargs.get('gzip', True))
+    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2),
+                          gzip=kwargs.get('gzip', True))
     ostream.write(*objs_list)
     ostream.close()
 
