@@ -1,6 +1,5 @@
 PIP=pip
 TEST=nosetests
-PKG_NAME=stream
 TESTREPO=pypitest
 MAINREPO=pypi
 
@@ -18,13 +17,10 @@ vg_pb2.py:
 test: vg_pb2.py
 	${TEST}
 
-README.rst: README.md
-	pandoc -o $@ $<
-
-dist-test: README.rst
+dist-test:
 	python setup.py register -r ${TESTREPO}
 	python setup.py sdist upload -r ${TESTREPO}
 
-dist: README.rst
+dist:
 	python setup.py register -r ${MAINREPO}
 	python setup.py sdist upload -r ${MAINREPO}

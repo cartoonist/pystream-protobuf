@@ -32,8 +32,8 @@ with open(os.path.join(_HERE, _PACKAGE_NAME, 'release.py')) as release_file:
     exec(release_file.read(), _RELEASE_INFO)  # pylint: disable=exec-used
 
 # Get the long description from the README file.
-with codecs.open(os.path.join(_HERE, 'README.rst'), encoding='utf-8') as rm_f:
-    LONG_DESCRIPTION = rm_f.read()
+with codecs.open(os.path.join(_HERE, 'README.md'), encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
 
 _PYPINAME = "pystream-protobuf"
 _PACKAGES = find_packages(exclude=['test'])
@@ -47,6 +47,7 @@ setup(
     version=_RELEASE_INFO['__version__'],
     description=_RELEASE_INFO['__description__'],
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     author=_RELEASE_INFO['__author__'],
     author_email=_RELEASE_INFO['__email__'],
     license=_RELEASE_INFO['__license__'],
