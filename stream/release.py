@@ -1,6 +1,14 @@
 # coding=utf-8
 
-"""Include release information of the 'pystream-protobuf' package."""
+"""
+    stream.release
+    ~~~~~~~~~~~~~~
+
+    Include release information of the package.
+
+    :copyright: (c) 2016 by Ali Ghaffaari.
+    :license: MIT, see LICENSE for more details.
+"""
 
 # CONSTANTS ###################################################################
 # Development statuses:
