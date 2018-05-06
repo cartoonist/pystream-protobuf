@@ -1,6 +1,14 @@
 # coding=utf-8
 
-"""Include release information of the 'pystream-protobuf' package."""
+"""
+    stream.release
+    ~~~~~~~~~~~~~~
+
+    Include release information of the package.
+
+    :copyright: (c) 2016 by Ali Ghaffaari.
+    :license: MIT, see LICENSE for more details.
+"""
 
 # CONSTANTS ###################################################################
 # Development statuses:
@@ -30,11 +38,11 @@ __email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
 __license__ = 'MIT'
 
 # Release
-__version__ = '1.4.5'
+__version__ = '1.4.6'
 __status__ = DS_BETA
 
 # PyPI-related information
-__keywords__ = ['protobuf', 'stream', 'protocol buffer']
+__keywords__ = 'stream protocol buffer protobuf'
 __classifiers__ = [
     # Development status
     DS_STRING[__status__],
@@ -43,9 +51,11 @@ __classifiers__ = [
     'License :: OSI Approved :: MIT License',
 
     # Supported Python versions.
-    'Programming Language :: Python :: 3.3',
-    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
 
     # Intended Audience and Topic
     'Intended Audience :: Developers',
@@ -53,8 +63,9 @@ __classifiers__ = [
 __requires__ = ['protobuf>=3.4.0', 'click>=6.0.0']
 __tests_require__ = []
 __extras_require__ = {
-    'test': ['nose'],
+    'test': ['nose>=1.0', 'coverage'],
 }
+__setup_requires__ = ['nose>=1.0', 'coverage']
 __entry_points__ = '''
 [console_scripts]
 varint=stream.varint:cli

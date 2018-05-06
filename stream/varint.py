@@ -38,13 +38,13 @@ def cmd_decode(input_file):
     decode(input_file)
 
 
-def encode(x):
+def encode(value):
     """Output the encoded value to the standard output.
 
     Args:
-        x (int):  the integer to be encoded.
+        value (int):  the integer to be encoded.
     """
-    encodeVarint(sys.stdout.buffer.write, x, True)
+    encodeVarint(sys.stdout.buffer.write, value, True)
 
 
 def decode(input_file):
