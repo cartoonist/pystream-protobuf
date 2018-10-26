@@ -16,36 +16,47 @@ from google.protobuf.internal.decoder import _DecodeVarint as decodeVarint
 from google.protobuf.internal.encoder import _EncodeVarint as encodeVarint
 
 
-def parse(fpath, pb_cls, **kwargs):
+def parse(ifp, pb_cls, **kwargs):
     """Parse a stream.
 
     Args:
-        fpath (string): Path of the input stream.
+        ifp (string or file-like object): input stream.
         pb_cls (protobuf.message.Message.__class__): The class object of
             the protobuf message type encoded in the stream.
     """
-    with open(fpath, 'rb', **kwargs) as istream:
+    mode = 'rb'
+    if isinstance(ifp, str):
+        istream = open(ifp, mode=mode, **kwargs)
+    else:
+        istream = open(fileobj=ifp, mode=mode, **kwargs)
+    with istream:
         for data in istream:
             pb_obj = pb_cls()
             pb_obj.ParseFromString(data)
             yield pb_obj
 
 
-def dump(fpath, *pb_objs, **kwargs):
+def dump(ofp, *pb_objs, **kwargs):
     """Write to a stream.
 
     Args:
-        fpath (string): Path of the input stream.
+        ofp (string or file-like object): output stream.
         pb_objs (*protobuf.message.Message): list of protobuf message objects
             to be written.
     """
-    with open(fpath, 'wb', **kwargs) as ostream:
+    mode = 'wb'
+    if isinstance(ofp, str):
+        ostream = open(ofp, mode=mode, **kwargs)
+    else:
+        ostream = open(fileobj=ofp, mode=mode, **kwargs)
+    with ostream:
         ostream.write(*pb_objs)
 
 
-def open(fpath, mode='rb', **kwargs):  # pylint: disable=redefined-builtin
+def open(filename=None, mode='rb',  # pylint: disable=redefined-builtin
+         **kwargs):
     """Open an stream."""
-    return Stream(fpath, mode, **kwargs)
+    return Stream(filename, mode, **kwargs)
 
 
 class Stream(object):
@@ -68,6 +79,7 @@ class Stream(object):
 
     Attributes:
         _fd:            file object.
+        _myfd:          file object to be closed (owned).
         _buffer_size:   size of the buffer to write as a one group of messages
                         (write-mode only).
         _write_buff:    list of buffered messages for writing (write-mode only)
@@ -76,14 +88,15 @@ class Stream(object):
                         a group change (read-mode only).
         _delimiter:     the delimiter class (read-mode only).
     """
-    def __init__(self, fpath, mode='rb', **kwargs):
+    def __init__(self, filename=None, mode='rb', fileobj=None, **kwargs):
         """Constructor for the Stream class.
 
         Args:
-            fpath (string): Path of the working file.
+            filename (string): Path of the working file.
             mode (string): The mode argument can be any of 'r', 'rb', 'a',
                 'ab', 'w', or 'wb', depending on whether the file will be read
                 or written. The default is 'rb'.
+            fileobj (file-like object): input/output stream object.
 
         Keyword args:
             buffer_size (int): Write buffer size. The objects will be buffered
@@ -99,11 +112,16 @@ class Stream(object):
             gzip (bool): Whether or not to use gzip compression on the given
                 file. (default is True)
         """
-        if kwargs.get('gzip', True):
-            self._fd = gzip.open(fpath, mode)
+        self._myfd = None
+        if fileobj is None:
+            if kwargs.get('gzip', True):
+                self._fd = gzip.open(filename, mode)
+            else:
+                import builtins
+                self._fd = builtins.open(filename, mode)
+            self._myfd = self._fd
         else:
-            import builtins
-            self._fd = builtins.open(fpath, mode)
+            self._fd = fileobj
         if not mode.startswith('r'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
@@ -173,7 +191,9 @@ class Stream(object):
     def close(self):
         """Close the stream."""
         self.flush()
-        self._fd.close()
+        if self._myfd is not None:
+            self._myfd.close()
+            self._myfd = None
 
     def write(self, *pb2_obj):
         """Write a group of one or more protobuf objects to the file. Multiple
