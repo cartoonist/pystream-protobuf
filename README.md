@@ -24,6 +24,7 @@ You can install pyStream using `pip`:
 Here is a sample code to read a file containing a set of protobuf messages (here
 is a set of [VG](https://github.com/vgteam/vg)'s Alignment objects, so-called
 GAM file, defined [here](https://github.com/vgteam/vg/blob/master/src/vg.proto)).
+The Alignment class is just an example and it can be any protobuf message.
 It yields the protobuf objects stored in the file:
 
 ```python
@@ -33,8 +34,18 @@ import vg_pb2
 alns = [a for a in stream.parse('test.gam', vg_pb2.Alignment)]
 ```
 
-Or the lower-level method `open` can be used in order to have more control over
-opening the stream and reading data:
+Instead of file path, an input stream can be passed to the method `parse`:
+
+```python
+import stream
+import vg_pb2
+
+# ... an already existing file-like object `f` as input stream.
+alns = [a for a in stream.parse(f, vg_pb2.Alignment)]
+```
+
+In order to have more control over opening the stream and reading data, the
+lower-level method `open` can be used:
 
 ```python
 import stream
@@ -52,13 +63,34 @@ The stream can be closed by calling `close` method explicitly, in which case the
 stream is opened without using `with` statement (see more examples in the test
 package).
 
+The method `open` is not restricted to files, as it can be used for any binary
+stream. It can be done by passing file object rather than file name to method
+`open` or directly to `Stream` class:
+
+```python
+# ... an already existing file-like object `f` as input stream.
+with stream.open(fileobj=f, mode='rb') as istream:
+# ... continue using istream
+```
+
 ### Writing
-Multiple protobuf objects can be written into a file (here a GAM file) by
-calling `dump` function:
+Multiple protobuf objects can be written into a file or any output stream by
+calling `dump` function. An example of writing a list of Alignment objects to a
+file named `test.gam`:
 
 ```python
 import stream
 
+stream.dump('test.gam', *objects_list, buffer_size=10)
+```
+
+If writing to an existing output stream is desired, the `dump` method accepts any
+file-like object as output stream:
+
+```python
+import stream
+
+# ... an already existing file-like object `f` as input stream.
 stream.dump('test.gam', *objects_list, buffer_size=10)
 ```
 
@@ -73,7 +105,8 @@ with stream.open('test.gam', 'ab') as ostream:
     ostream.write(*another_objects_list)
 ```
 
-Similar to reading, the stream can be closed by explicitly calling `close`;
+Similar to reading, `open` method accepts `fileobj` argument for any output
+stream and the stream can be closed by explicitly calling `close`;
 particularly when the stream is opened without using `with` statement.
 
 ## More features

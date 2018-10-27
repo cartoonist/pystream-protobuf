@@ -40,21 +40,27 @@ def read_alns2(fpath, **kwargs):
     Here, as an example, the file is a GAM file containing Alignment messages
     defined in vg_pb2.
 
-    NOTE: Do the same as `read_alns1`.
+    NOTE: Does the same as `read_alns1`.
 
     Args:
         fpath (string): path of the file to be read.
     """
     nof_groups = 0
-    istream = stream.open(fpath, 'rb', group_delimiter=True, **kwargs)
-    for data in istream:
-        if data is None:
-            nof_groups += 1
-            continue
-        aln = vg_pb2.Alignment()
-        aln.ParseFromString(data)
-        yield aln
-    istream.close()
+    mode = 'rb'
+    if kwargs.get('gzip', True):
+        ifs = gzip.open(fpath, mode)
+    else:
+        ifs = open(fpath, mode)
+    with ifs:
+        istream = stream.open(fileobj=ifs, group_delimiter=True, **kwargs)
+        for data in istream:
+            if data is None:
+                nof_groups += 1
+                continue
+            aln = vg_pb2.Alignment()
+            aln.ParseFromString(data)
+            yield aln
+        istream.close()
 
     assert nof_groups == 2
 
@@ -81,16 +87,22 @@ def write_objs2(fpath, *objs_list, **kwargs):
     It writes half of them in one group, and then the other half in another one
     by setting buffer size to half of the object list size.
 
-    NOTE: Do the same as `write_objs1`.
+    NOTE: Does the same as `write_objs1`.
 
     Args:
         fpath (string): path of the file to be written.
         objs_list (*protobuf.message.Message): list of objects to be written.
     """
-    ostream = stream.open(fpath, 'wb', buffer_size=(len(objs_list)//2),
-                          **kwargs)
-    ostream.write(*objs_list)
-    ostream.close()
+    mode = 'wb'
+    if kwargs.get('gzip', True):
+        ofs = gzip.open(fpath, mode)
+    else:
+        ofs = open(fpath, mode)
+    with ofs:
+        ostream = stream.open(fileobj=ofs, mode='wb',
+                              buffer_size=(len(objs_list)//2), **kwargs)
+        ostream.write(*objs_list)
+        ostream.close()
 
 
 def test_low(**kwargs):
