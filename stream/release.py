@@ -38,7 +38,7 @@ __email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
 __license__ = 'MIT'
 
 # Release
-__version__ = '1.5.0'
+__version__ = '1.5.1'
 __status__ = DS_BETA
 
 # PyPI-related information
@@ -60,7 +60,7 @@ __classifiers__ = [
     # Intended Audience and Topic
     'Intended Audience :: Developers',
 ]
-__requires__ = ['protobuf>=3.4.0', 'click>=6.0.0']
+__requires__ = ['protobuf>=3.4.0', 'click>=6.0.0', 'future']
 __tests_require__ = []
 __extras_require__ = {
     'test': ['nose>=1.0', 'coverage'],
