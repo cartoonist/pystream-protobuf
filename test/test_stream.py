@@ -13,6 +13,8 @@
 import os
 import gzip
 import unittest
+import asyncio
+import socket
 import filecmp
 
 from .context import stream
@@ -336,6 +338,51 @@ class TestStream(unittest.TestCase):
         for sample in TestStream.files:
             self.sync_integration_mid(sample, gzip=sample['gzip'])
             self.sync_integration_high(sample, gzip=sample['gzip'])
+
+    async def async_integration(self):
+        """Write some known messages to an async stream and retrieve them back.
+        """
+        a_sock, b_sock = socket.socketpair()
+        a_reader, a_writer = await asyncio.open_connection(sock=a_sock)
+        b_reader, b_writer = await asyncio.open_connection(sock=b_sock)
+
+        msgs = list()
+        msgs.append(vg_pb2.Position())
+        msgs[-1].node_id = 8584
+        msgs[-1].offset = 66
+        msgs.append(vg_pb2.Position())
+        msgs[-1].node_id = 73649
+        msgs[-1].offset = 12092
+
+        stream.dump(a_writer, msgs[0])
+        stream.dump(a_writer, msgs[1])
+
+        self.assertEqual(msgs[0].node_id, 8584)
+        self.assertEqual(msgs[0].offset, 66)
+        self.assertEqual(msgs[1].node_id, 73649)
+        self.assertEqual(msgs[1].offset, 12092)
+
+        async def assertion(nof_groups):
+            messages_asserted = 0
+            counted_groups = 1
+            async for message in stream.async_parse(b_reader, vg_pb2.Position,
+                                                    group_delimiter=True):
+                if not isinstance(message, vg_pb2.Position):
+                    counted_groups += 1
+                    continue
+                expected_message = msgs.pop(0)
+                self.assertEqual(message.node_id, expected_message.node_id)
+                self.assertEqual(message.offset, expected_message.offset)
+                messages_asserted += 1
+                if messages_asserted == 2:
+                    break
+            self.assertEqual(counted_groups, nof_groups)
+
+        await asyncio.wait_for(assertion(2), 1.0)
+
+    def test_async_integration(self):
+        """Integration test for async parsing/writing."""
+        asyncio.run(self.async_integration())
 
     def tearDown(self):
         """Tear down function."""

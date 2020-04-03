@@ -11,6 +11,7 @@
 """
 
 import gzip
+import asyncio
 
 from google.protobuf.internal.decoder import _DecodeVarint as decodeVarint
 from google.protobuf.internal.encoder import _EncodeVarint as encodeVarint
@@ -31,6 +32,24 @@ def parse(ifp, pb_cls, **kwargs):
         istream = open(fileobj=ifp, mode=mode, **kwargs)
     with istream:
         for data in istream:
+            if isinstance(data, istream.delimiter_class()):
+                yield data
+            else:
+                pb_obj = pb_cls()
+                pb_obj.ParseFromString(data)
+                yield pb_obj
+
+
+async def async_parse(ifp, pb_cls, **kwargs):
+    """Parse an async stream.
+
+    Args:
+        ifp (file-like object): input async stream.
+        pb_cls (protobuf.message.Message.__class__): The class object of
+            the protobuf message type encoded in the stream.
+    """
+    with open(fileobj=ifp, mode='rb', **kwargs) as istream:
+        async for data in istream:
             if isinstance(data, istream.delimiter_class()):
                 yield data
             else:
@@ -148,6 +167,10 @@ class Stream(object):
         """Return the iterator object of the stream."""
         return self._get_objs()
 
+    def __aiter__(self):
+        """Return the async iterator object of the stream."""
+        return self._async_get_objs()
+
     def _read_varint(self):
         """Read a varint from file, parse it, and return the decoded integer.
         """
@@ -157,6 +180,24 @@ class Stream(object):
 
         while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
             new_byte = self._fd.read(1)
+            if new_byte == b'':
+                raise EOFError('unexpected EOF.')
+            buff += new_byte
+
+        varint, _ = decodeVarint(buff, 0)
+
+        return varint
+
+    async def _async_read_varint(self):
+        """Read a varint from an async stream, parse it, and return the decoded
+        integer.
+        """
+        buff = await self._fd.read(1)
+        if buff == b'':
+            return 0
+
+        while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
+            new_byte = await self._fd.read(1)
             if new_byte == b'':
                 raise EOFError('unexpected EOF.')
             buff += new_byte
@@ -188,6 +229,26 @@ class Stream(object):
                 yield self._fd.read(size)
             group_flag = True
 
+    async def _async_get_objs(self):
+        """A async generator yielding all protobuf object data in the file. It
+        is the main parser of the stream encoding.
+        """
+        while True:
+            count = await self._async_read_varint()
+            if count == 0:
+                break
+            # Read a group containing `count` number of objects.
+            for _ in range(count):
+                size = await self._async_read_varint()
+                if size == 0:
+                    raise EOFError('unexpected EOF.')
+                # Read an object from the object group.
+                yield await self._fd.read(size)
+
+            if self._group_delim:
+                yield self._delimiter() if self._delimiter is not None \
+                                        else None
+
     def delimiter_class(self):
         """Return group delimiter class."""
         return type(None) if self._delimiter is None else self._delimiter
@@ -197,6 +258,15 @@ class Stream(object):
         if hasattr(self, '_write_buff'):
             return True
         return False
+
+    def is_async(self):
+        """Check whether the read/write functions of the file object is a
+        coroutine function.
+        """
+        if self.is_output():
+            return asyncio.iscoroutinefunction(self._fd.write)
+        else:
+            return asyncio.iscoroutinefunction(self._fd.read)
 
     def close(self):
         """Close the stream."""

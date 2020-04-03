@@ -11,8 +11,9 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from .stream import parse   # noqa
-from .stream import dump    # noqa
-from .stream import open    # noqa pylint: disable=redefined-builtin
-from .stream import Stream  # noqa
-from . import release       # noqa
+from .stream import parse        # noqa
+from .stream import async_parse  # noqa
+from .stream import dump         # noqa
+from .stream import open         # noqa pylint: disable=redefined-builtin
+from .stream import Stream       # noqa
+from . import release            # noqa
