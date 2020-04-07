@@ -31,9 +31,12 @@ def parse(ifp, pb_cls, **kwargs):
         istream = open(fileobj=ifp, mode=mode, **kwargs)
     with istream:
         for data in istream:
-            pb_obj = pb_cls()
-            pb_obj.ParseFromString(data)
-            yield pb_obj
+            if isinstance(data, istream.delimiter_class()):
+                yield data
+            else:
+                pb_obj = pb_cls()
+                pb_obj.ParseFromString(data)
+                yield pb_obj
 
 
 def dump(ofp, *pb_objs, **kwargs):
@@ -166,10 +169,16 @@ class Stream(object):
         """A generator yielding all protobuf object data in the file. It is the
         main parser of the stream encoding.
         """
+        group_flag = False
         while True:
             count = self._read_varint()
             if count == 0:
                 break
+
+            if group_flag and self._group_delim:
+                yield self._delimiter() if self._delimiter is not None \
+                                        else None
+                group_flag = False
             # Read a group containing `count` number of objects.
             for _ in range(count):
                 size = self._read_varint()
@@ -177,10 +186,11 @@ class Stream(object):
                     raise EOFError('unexpected EOF.')
                 # Read an object from the object group.
                 yield self._fd.read(size)
+            group_flag = True
 
-            if self._group_delim:
-                yield self._delimiter() if self._delimiter is not None \
-                                        else None
+    def delimiter_class(self):
+        """Return group delimiter class."""
+        return type(None) if self._delimiter is None else self._delimiter
 
     def is_output(self):
         """Check whether the stream is output stream or not."""
