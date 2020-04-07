@@ -213,9 +213,16 @@ class TestStream(unittest.TestCase):
         # Rewrite them into a new file in two groups.
         writer(ofile, *msgs, **kwargs)
 
-    def sync_integration_low(self, sample, **kwargs):
+    def sync_integration_mid(self, sample, **kwargs):
         """Parse/write the sample file using two versions of read/write
-        functions based on low-level API and compare the output.
+        functions based on mid-level API and compare the output.
+
+        Args:
+            sample (dict): sample dictionary.
+
+        All keyworded arguments will be passed to `Stream` class except for
+        `group_delimiter` and `delimiter_cls` which are modified inside
+        function.
         """
         # Do a single phase using read/write functions getting file name.
         tmpfile1 = TestStream.tmpfile1
@@ -235,6 +242,13 @@ class TestStream(unittest.TestCase):
     def sync_integration_high(self, sample, **kwargs):
         """Parse/write the sample file using two versions of read/write
         functions based on high-level API and compare the output.
+
+        Args:
+            sample (dict): sample dictionary.
+
+        All keyworded arguments will be passed to `Stream` class except for
+        `group_delimiter` and `delimiter_cls` which are modified inside
+        function.
         """
         tmpfile1 = TestStream.tmpfile1
         tmpfile2 = TestStream.tmpfile2
@@ -249,10 +263,78 @@ class TestStream(unittest.TestCase):
         # Compare two generated files to be identical.
         self.assertTrue(self.cmp(tmpfile1, tmpfile2, **kwargs))
 
-    def test_sync_integration(self, **kwargs):
+    def sync_integration_low(self, **kwargs):
+        """Write some known messages to a stream file and retrieve them by
+        using low-level API without using context manager.
+        """
+        tmpfile1 = TestStream.tmpfile1
+
+        expected_message = vg_pb2.Mapping()
+        expected_message.position.node_id = 7599
+        expected_message.position.offset = 472
+        expected_message.position.is_reverse = True
+        expected_message.position.name = "expected_message"
+        edit = expected_message.edit.add()
+        edit.from_length = 4
+        edit.to_length = 5
+        edit.sequence = "A"
+        edit = expected_message.edit.add()
+        edit.from_length = 45
+        edit.to_length = 45
+        edit.sequence = "CATCCGCTAGCTA"
+        expected_message.rank = 3
+
+        ostream = stream.Stream(tmpfile1, 'wb', **kwargs)
+        ostream.write(expected_message, **kwargs)
+        ostream.write(expected_message, **kwargs)
+        ostream.close()
+
+        self.assertEqual(expected_message.position.node_id, 7599)
+        self.assertEqual(expected_message.position.offset, 472)
+        self.assertEqual(expected_message.position.is_reverse, True)
+        self.assertEqual(expected_message.position.name, "expected_message")
+        self.assertEqual(expected_message.edit[0].from_length, 4)
+        self.assertEqual(expected_message.edit[0].to_length, 5)
+        self.assertEqual(expected_message.edit[0].sequence, "A")
+        self.assertEqual(expected_message.edit[1].from_length, 45)
+        self.assertEqual(expected_message.edit[1].to_length, 45)
+        self.assertEqual(expected_message.edit[1].sequence, "CATCCGCTAGCTA")
+        self.assertEqual(expected_message.rank, 3)
+
+        istream = stream.Stream(tmpfile1, 'rb', **kwargs)
+        for data in istream:
+            message = vg_pb2.Mapping()
+            message.ParseFromString(data)
+            self.assertEqual(message.position.node_id,
+                             expected_message.position.node_id)
+            self.assertEqual(message.position.offset,
+                             expected_message.position.offset)
+            self.assertEqual(message.position.is_reverse,
+                             expected_message.position.is_reverse)
+            self.assertEqual(message.position.name,
+                             expected_message.position.name)
+            self.assertEqual(len(message.edit),
+                             len(expected_message.edit))
+            self.assertEqual(message.edit[0].from_length,
+                             expected_message.edit[0].from_length)
+            self.assertEqual(message.edit[0].to_length,
+                             expected_message.edit[0].to_length)
+            self.assertEqual(message.edit[0].sequence,
+                             expected_message.edit[0].sequence)
+            self.assertEqual(message.edit[1].from_length,
+                             expected_message.edit[1].from_length)
+            self.assertEqual(message.edit[1].to_length,
+                             expected_message.edit[1].to_length)
+            self.assertEqual(message.edit[1].sequence,
+                             expected_message.edit[1].sequence)
+            self.assertEqual(message.rank, expected_message.rank)
+        istream.close()
+
+    def test_sync_integration(self):
         """Integration test for sync parsing/writing."""
+        self.sync_integration_low()
         for sample in TestStream.files:
-            self.sync_integration_low(sample, gzip=sample['gzip'])
+            self.sync_integration_mid(sample, gzip=sample['gzip'])
             self.sync_integration_high(sample, gzip=sample['gzip'])
 
     def tearDown(self):
