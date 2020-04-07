@@ -1,13 +1,14 @@
 TESTPYPI=testpypi
 
 vpath %_pb2.py test/
+vpath %.proto test/
 
 # Specifying phony targets
 .PHONY: init test build package dist-test dist dist-clean
 
 init: vg_pb2.py
 
-vg_pb2.py:
+vg_pb2.py: vg.proto
 	protoc -I=test/ --python_out=test/ test/vg.proto
 
 test: init
