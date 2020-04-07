@@ -38,7 +38,7 @@ __email__ = 'ali.ghaffaari@mpi-inf.mpg.de'
 __license__ = 'MIT'
 
 # Release
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 __status__ = DS_BETA
 
 # PyPI-related information
@@ -51,11 +51,11 @@ __classifiers__ = [
     'License :: OSI Approved :: MIT License',
 
     # Supported Python versions.
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
 
     # Intended Audience and Topic
     'Intended Audience :: Developers',
