@@ -11,6 +11,7 @@
 """
 
 import os
+import sys
 import gzip
 import unittest
 import asyncio
@@ -382,7 +383,18 @@ class TestStream(unittest.TestCase):
 
     def test_async_integration(self):
         """Integration test for async parsing/writing."""
-        asyncio.run(self.async_integration())
+        if sys.version_info >= (3, 7):
+            asyncio.run(self.async_integration())
+        else:
+            # Emulate asyncio.run() on older versions
+            # https://stackoverflow.com/a/55595696/357257
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(self.async_integration())
+            finally:
+                loop.close()
+                asyncio.set_event_loop(None)
 
     def tearDown(self):
         """Tear down function."""
