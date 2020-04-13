@@ -15,6 +15,7 @@ import asyncio
 
 from google.protobuf.internal.decoder import _DecodeVarint as decodeVarint
 from google.protobuf.internal.encoder import _EncodeVarint as encodeVarint
+from async_generator import async_generator, yield_
 
 
 def parse(ifp, pb_cls, **kwargs):
@@ -40,6 +41,7 @@ def parse(ifp, pb_cls, **kwargs):
                 yield pb_obj
 
 
+@async_generator
 async def async_parse(ifp, pb_cls, **kwargs):
     """Parse an async stream.
 
@@ -51,11 +53,11 @@ async def async_parse(ifp, pb_cls, **kwargs):
     with open(fileobj=ifp, mode='rb', **kwargs) as istream:
         async for data in istream:
             if isinstance(data, istream.delimiter_class()):
-                yield data
+                await yield_(data)
             else:
                 pb_obj = pb_cls()
                 pb_obj.ParseFromString(data)
-                yield pb_obj
+                await yield_(pb_obj)
 
 
 def dump(ofp, *pb_objs, **kwargs):
