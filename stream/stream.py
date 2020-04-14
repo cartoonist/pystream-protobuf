@@ -11,9 +11,11 @@
 """
 
 import gzip
+import asyncio
 
 from google.protobuf.internal.decoder import _DecodeVarint as decodeVarint
 from google.protobuf.internal.encoder import _EncodeVarint as encodeVarint
+from async_generator import async_generator, yield_
 
 
 def parse(ifp, pb_cls, **kwargs):
@@ -37,6 +39,25 @@ def parse(ifp, pb_cls, **kwargs):
                 pb_obj = pb_cls()
                 pb_obj.ParseFromString(data)
                 yield pb_obj
+
+
+@async_generator
+async def async_parse(ifp, pb_cls, **kwargs):
+    """Parse an async stream.
+
+    Args:
+        ifp (file-like object): input async stream.
+        pb_cls (protobuf.message.Message.__class__): The class object of
+            the protobuf message type encoded in the stream.
+    """
+    with open(fileobj=ifp, mode='rb', **kwargs) as istream:
+        async for data in istream:
+            if isinstance(data, istream.delimiter_class()):
+                await yield_(data)
+            else:
+                pb_obj = pb_cls()
+                pb_obj.ParseFromString(data)
+                await yield_(pb_obj)
 
 
 def dump(ofp, *pb_objs, **kwargs):
@@ -131,6 +152,8 @@ class Stream(object):
         else:
             self._group_delim = kwargs.pop('group_delimiter', False)
             self._delimiter = kwargs.pop('delimiter_cls', None)
+            self._count = 0  # Remaining number of objects in the current group
+            self._gflag = False  # Group flag
 
     def __enter__(self):
         """Enter the runtime context related to Stream class. It will be
@@ -146,7 +169,11 @@ class Stream(object):
 
     def __iter__(self):
         """Return the iterator object of the stream."""
-        return self._get_objs()
+        return self
+
+    def __aiter__(self):
+        """Return the async iterator object of the stream."""
+        return self
 
     def _read_varint(self):
         """Read a varint from file, parse it, and return the decoded integer.
@@ -165,28 +192,67 @@ class Stream(object):
 
         return varint
 
-    def _get_objs(self):
-        """A generator yielding all protobuf object data in the file. It is the
-        main parser of the stream encoding.
+    async def _async_read_varint(self):
+        """Read a varint from an async stream, parse it, and return the decoded
+        integer.
         """
-        group_flag = False
-        while True:
-            count = self._read_varint()
-            if count == 0:
-                break
+        buff = await self._fd.read(1)
+        if buff == b'':
+            return 0
 
-            if group_flag and self._group_delim:
-                yield self._delimiter() if self._delimiter is not None \
-                                        else None
-                group_flag = False
-            # Read a group containing `count` number of objects.
-            for _ in range(count):
-                size = self._read_varint()
-                if size == 0:
-                    raise EOFError('unexpected EOF.')
-                # Read an object from the object group.
-                yield self._fd.read(size)
-            group_flag = True
+        while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
+            new_byte = await self._fd.read(1)
+            if new_byte == b'':
+                raise EOFError('unexpected EOF.')
+            buff += new_byte
+
+        varint, _ = decodeVarint(buff, 0)
+
+        return varint
+
+    def __next__(self):
+        """Get the next protobuf object data in a sync stream."""
+        # Read the size of the next group when the current group is consumed.
+        if self._count == 0:
+            self._count = self._read_varint()
+        # Read a group containing `self._count` number of objects.
+        if self._count != 0:
+            if self._gflag:  # The next element is a delimiter instance.
+                assert self._group_delim
+                self._gflag = False  # Reset the group flag
+                return self.delimiter_class()()
+            self._count -= 1
+            if self._group_delim and self._count == 0:
+                self._gflag = True  # Set the flag as all objects are read.
+            size = self._read_varint()
+            if size == 0:
+                raise EOFError('unexpected EOF.')
+            # Read an object from the object group.
+            return self._fd.read(size)
+        else:
+            raise StopIteration
+
+    async def __anext__(self):
+        """Get the next protobuf object data in an async stream."""
+        # Read the size of the next group when the current group is consumed.
+        if self._count == 0:
+            self._count = await self._async_read_varint()
+        # Read a group containing `self._count` number of objects.
+        if self._count != 0:
+            if self._gflag:  # The next element is a delimiter instance.
+                assert self._group_delim
+                self._gflag = False  # Reset the group flag
+                return self.delimiter_class()()
+            self._count -= 1
+            if self._group_delim and self._count == 0:
+                self._gflag = True  # Set the flag as all objects are read.
+            size = await self._async_read_varint()
+            if size == 0:
+                raise EOFError('unexpected EOF.')
+            # Read an object from the object group.
+            return await self._fd.read(size)
+        else:
+            raise StopAsyncIteration
 
     def delimiter_class(self):
         """Return group delimiter class."""
@@ -197,6 +263,15 @@ class Stream(object):
         if hasattr(self, '_write_buff'):
             return True
         return False
+
+    def is_async(self):
+        """Check whether the read/write functions of the file object is a
+        coroutine function.
+        """
+        if self.is_output():
+            return asyncio.iscoroutinefunction(self._fd.write)
+        else:
+            return asyncio.iscoroutinefunction(self._fd.read)
 
     def close(self):
         """Close the stream."""
