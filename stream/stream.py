@@ -228,7 +228,10 @@ class Stream(object):
             if size == 0:
                 raise EOFError('unexpected EOF.')
             # Read an object from the object group.
-            return self._fd.read(size)
+            val = self._fd.read(size)
+            if len(val) < size:
+                raise EOFError("Unexpected EOF. Partial read")
+            return val
         else:
             raise StopIteration
 
