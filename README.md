@@ -31,8 +31,7 @@ size of each message is followed by the encoded message itself. Quoted from
 > read the bytes into a separate buffer, then parse from that buffer.
 
 By default, the stream is considered compressed by GZip. However, uncompressed
-stream processing is possible by passing `gzip=False` to any API calls (see
-[optional GZip compression section](#optional-gzip-compression)).
+stream processing is possible by passing `gzip=False` to any API calls.
 
 ## Installation
 You can install pyStream using `pip`:
