@@ -185,7 +185,7 @@ class Stream(object):
         while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
             new_byte = self._fd.read(1)
             if new_byte == b'':
-                raise EOFError('unexpected EOF.')
+                raise EOFError("unexpected EOF")
             buff += new_byte
 
         varint, _ = decodeVarint(buff, 0)
@@ -203,7 +203,7 @@ class Stream(object):
         while (bytearray(buff)[-1] & 0x80) >> 7 == 1:  # while the MSB is 1
             new_byte = await self._fd.read(1)
             if new_byte == b'':
-                raise EOFError('unexpected EOF.')
+                raise EOFError("unexpected EOF")
             buff += new_byte
 
         varint, _ = decodeVarint(buff, 0)
@@ -226,11 +226,11 @@ class Stream(object):
                 self._gflag = True  # Set the flag as all objects are read.
             size = self._read_varint()
             if size == 0:
-                raise EOFError('unexpected EOF.')
+                raise EOFError("unexpected EOF")
             # Read an object from the object group.
             val = self._fd.read(size)
             if len(val) < size:
-                raise EOFError("Unexpected EOF. Partial read")
+                raise EOFError("unexpected EOF (partial read)")
             return val
         else:
             raise StopIteration
@@ -251,7 +251,7 @@ class Stream(object):
                 self._gflag = True  # Set the flag as all objects are read.
             size = await self._async_read_varint()
             if size == 0:
-                raise EOFError('unexpected EOF.')
+                raise EOFError("unexpected EOF")
             # Read an object from the object group.
             return await self._fd.read(size)
         else:
