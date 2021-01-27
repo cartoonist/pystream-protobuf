@@ -28,12 +28,20 @@ class TestStream(unittest.TestCase):
               'class': vg_pb2.Alignment,
               'size': 12,
               'nof_groups': 6,
-              'gzip': True},
+              'gzip': True,
+              'header': ''},
              {'file': os.path.join(testdir, 'sample.ugm'),  # unzipped GAM
               'class': vg_pb2.Alignment,
               'size': 12,
               'nof_groups': 6,
-              'gzip': False}]
+              'gzip': False,
+              'header': ''},
+             {'file': os.path.join(testdir, 'sample_with_header.gam'),
+              'class': vg_pb2.Alignment,
+              'size': 2,
+              'nof_groups': 1,
+              'gzip': True,
+              'header': b'GAM'}]
     tmpfile1 = os.path.join(testdir, '.tmpfile1')
     tmpfile2 = os.path.join(testdir, '.tmpfile2')
 
@@ -337,8 +345,10 @@ class TestStream(unittest.TestCase):
         """Integration test for sync parsing/writing."""
         self.sync_integration_low()
         for sample in TestStream.files:
-            self.sync_integration_mid(sample, gzip=sample['gzip'])
-            self.sync_integration_high(sample, gzip=sample['gzip'])
+            self.sync_integration_mid(sample, gzip=sample['gzip'],
+                                      header=sample['header'])
+            self.sync_integration_high(sample, gzip=sample['gzip'],
+                                       header=sample['header'])
 
     async def async_integration(self):
         """Write some known messages to an async stream and retrieve them back.
@@ -355,7 +365,7 @@ class TestStream(unittest.TestCase):
         msgs[-1].node_id = 73649
         msgs[-1].offset = 12092
 
-        stream.dump(a_writer, msgs[0])
+        stream.dump(a_writer, msgs[0], header=b'Pos')
         stream.dump(a_writer, msgs[1])
 
         self.assertEqual(msgs[0].node_id, 8584)
@@ -367,7 +377,8 @@ class TestStream(unittest.TestCase):
             messages_asserted = 0
             counted_groups = 1
             async for message in stream.async_parse(b_reader, vg_pb2.Position,
-                                                    group_delimiter=True):
+                                                    group_delimiter=True,
+                                                    header=b'Pos'):
                 if not isinstance(message, vg_pb2.Position):
                     counted_groups += 1
                     continue

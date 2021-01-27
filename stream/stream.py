@@ -135,6 +135,7 @@ class Stream(object):
             delimiter_cls (class): delimiter class.
             gzip (bool): Whether or not to use gzip compression on the given
                 file. (default is True)
+            header (bytes): the header which is expected to read or write.
         """
         self._myfd = None
         if fileobj is None:
@@ -146,6 +147,7 @@ class Stream(object):
             self._myfd = self._fd
         else:
             self._fd = fileobj
+        self._header = kwargs.pop('header', b'')
         if not mode.startswith('r'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._write_buff = []
@@ -210,8 +212,8 @@ class Stream(object):
 
         return varint
 
-    def __next__(self):
-        """Get the next protobuf object data in a sync stream."""
+    def _next(self):
+        """Get the next data blob in a sync stream."""
         # Read the size of the next group when the current group is consumed.
         if self._count == 0:
             self._count = self._read_varint()
@@ -235,8 +237,8 @@ class Stream(object):
         else:
             raise StopIteration
 
-    async def __anext__(self):
-        """Get the next protobuf object data in an async stream."""
+    async def _anext(self):
+        """Get the next data blob in an async stream."""
         # Read the size of the next group when the current group is consumed.
         if self._count == 0:
             self._count = await self._async_read_varint()
@@ -256,6 +258,30 @@ class Stream(object):
             return await self._fd.read(size)
         else:
             raise StopAsyncIteration
+
+    def __next__(self):
+        """Get the next protobuf object data in a sync stream and check the
+        header.
+        """
+        val = self._next()
+        if self._header:
+            if val == self._header:
+                self._header = b''
+                return self._next()
+            raise RuntimeError(f"mismatch header (fetched {val})")
+        return val
+
+    async def __anext__(self):
+        """Get the next protobuf object data in an async stream and check the
+        header.
+        """
+        val = await self._anext()
+        if self._header:
+            if val == self._header:
+                self._header = b''
+                return await self._anext()
+            raise RuntimeError(f"mismatch header (fetched {val})")
+        return val
 
     def delimiter_class(self):
         """Return group delimiter class."""
@@ -306,16 +332,26 @@ class Stream(object):
         if self._buffer_size == 0:
             self.flush()
 
+    def _write_header(self):
+        """Write the header into the stream."""
+        assert self._header
+        encodeVarint(self._fd.write, len(self._header), True)
+        self._fd.write(self._header)
+        self._header = b''
+
     def flush(self):
         """Write down buffer to the file."""
         if not self.is_output():
             return
 
-        count = len(self._write_buff)
+        count = len(self._write_buff) + int(bool(self._header))
         if count == 0:
             return
 
         encodeVarint(self._fd.write, count, True)
+
+        if self._header:
+            self._write_header()
 
         for obj in self._write_buff:
             obj_str = obj.SerializeToString()
