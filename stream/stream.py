@@ -136,6 +136,8 @@ class Stream(object):
             gzip (bool): Whether or not to use gzip compression on the given
                 file. (default is True)
             header (bytes): the header which is expected to read or write.
+            serialize (function): serialising an input object to byte string.
+                If `None`, input objects are assumed to be protobuf messages.
         """
         self._myfd = None
         if fileobj is None:
@@ -154,6 +156,7 @@ class Stream(object):
         else:
             self._group_delim = kwargs.pop('group_delimiter', False)
             self._delimiter = kwargs.pop('delimiter_cls', None)
+            self._serialize = kwargs.pop('serialize', self.serialize_to_string)
             self._count = 0  # Remaining number of objects in the current group
             self._gflag = False  # Group flag
 
@@ -309,20 +312,29 @@ class Stream(object):
             self._myfd.close()
             self._myfd = None
 
-    def write(self, *pb2_obj):
-        """Write a group of one or more protobuf objects to the file. Multiple
-        object groups can be written by calling this method several times
-        before closing stream or exiting the runtime context.
+    def serialize_to_string(self, pb_obj):
+        """Serialise a protobuf message to byte string.
+
+        Args:
+            pb_obj (protobuf.message.Message): a protobuf message.
+        """
+        return pb_obj.SerializeToString()
+
+    def write(self, *objs):
+        """Write a group of one or more objects to the file. The method
+        `self._serialize` will be called on each object to get the byte string.
+        Multiple object groups can be written by calling this method several
+        times before closing stream or exiting the runtime context.
 
         The input protobuf objects get buffered and will be written down when
         the number of buffered objects exceed the `self._buffer_size`.
 
         Args:
-            pb2_obj (*protobuf.message.Message): list of protobuf messages.
+            objs (*object): list of objects.
         """
         base = len(self._write_buff)
 
-        for idx, obj in enumerate(pb2_obj):
+        for idx, obj in enumerate(objs):
             if self._buffer_size > 0 and \
                     (idx + base) != 0 and \
                     (idx + base) % self._buffer_size == 0:
@@ -354,7 +366,7 @@ class Stream(object):
             self._write_header()
 
         for obj in self._write_buff:
-            obj_str = obj.SerializeToString()
+            obj_str = self._serialize(obj)
             encodeVarint(self._fd.write, len(obj_str), True)
             self._fd.write(obj_str)
 
