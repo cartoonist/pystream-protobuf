@@ -18,6 +18,18 @@ protocol buffer messages.
 Refer to the C++ [stream library](https://github.com/vgteam/stream) for more
 details.
 
+---
+**NOTE**
+
+**@vg users:** The new version of stream library by
+[libvgio](https://github.com/vgteam/libvgio) writes a header at the start of the stream
+depending on the output format. For example, headers like `b'GAM'` or `b'VG'` can be
+found before the actual protobuf messages. In this case, you can provide the expected
+value using `header` keyword argument; e.g. `stream.parse('file.gam', header=b'GAM')`
+for GAM files (since version v1.6.2).
+
+---
+
 ## Encoding
 The encoding is simple. Messages are written in groups of different sizes. Each
 group starts with its size; i.e. the number of messages in that group. Then, the
