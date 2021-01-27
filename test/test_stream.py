@@ -341,9 +341,87 @@ class TestStream(unittest.TestCase):
             self.assertEqual(message.rank, expected_message.rank)
         istream.close()
 
+    def sync_integration_byte(self, **kwargs):
+        """Write some bytes to a stream instead of protobuf messages and
+        retrieve them.
+        """
+        tmpfile1 = TestStream.tmpfile1
+        objects = list()
+
+        objects.append(b'hello')
+        expected_message = vg_pb2.Mapping()
+        expected_message.position.node_id = 7599
+        expected_message.position.offset = 472
+        expected_message.position.is_reverse = True
+        expected_message.position.name = "expected_message"
+        edit = expected_message.edit.add()
+        edit.from_length = 4
+        edit.to_length = 5
+        edit.sequence = "A"
+        edit = expected_message.edit.add()
+        edit.from_length = 45
+        edit.to_length = 45
+        edit.sequence = "CATCCGCTAGCTA"
+        expected_message.rank = 3
+        objects.append(expected_message.SerializeToString())
+        objects.append(b'world!')
+
+        ost = stream.open(tmpfile1, mode='wb', serialize=lambda x:x, **kwargs)
+        ost.write(*objects)
+        ost.close()
+
+        self.assertEqual(objects[0], b'hello')
+        self.assertEqual(objects[2], b'world!')
+        self.assertEqual(expected_message.position.node_id, 7599)
+        self.assertEqual(expected_message.position.offset, 472)
+        self.assertEqual(expected_message.position.is_reverse, True)
+        self.assertEqual(expected_message.position.name, "expected_message")
+        self.assertEqual(expected_message.edit[0].from_length, 4)
+        self.assertEqual(expected_message.edit[0].to_length, 5)
+        self.assertEqual(expected_message.edit[0].sequence, "A")
+        self.assertEqual(expected_message.edit[1].from_length, 45)
+        self.assertEqual(expected_message.edit[1].to_length, 45)
+        self.assertEqual(expected_message.edit[1].sequence, "CATCCGCTAGCTA")
+        self.assertEqual(expected_message.rank, 3)
+
+        istream = stream.open(tmpfile1, 'rb', **kwargs)
+        data = next(istream)
+        self.assertEqual(data, objects[0])
+        data = next(istream)
+        message = vg_pb2.Mapping()
+        message.ParseFromString(data)
+        self.assertEqual(message.position.node_id,
+                         expected_message.position.node_id)
+        self.assertEqual(message.position.offset,
+                         expected_message.position.offset)
+        self.assertEqual(message.position.is_reverse,
+                         expected_message.position.is_reverse)
+        self.assertEqual(message.position.name,
+                         expected_message.position.name)
+        self.assertEqual(len(message.edit),
+                         len(expected_message.edit))
+        self.assertEqual(message.edit[0].from_length,
+                         expected_message.edit[0].from_length)
+        self.assertEqual(message.edit[0].to_length,
+                         expected_message.edit[0].to_length)
+        self.assertEqual(message.edit[0].sequence,
+                         expected_message.edit[0].sequence)
+        self.assertEqual(message.edit[1].from_length,
+                         expected_message.edit[1].from_length)
+        self.assertEqual(message.edit[1].to_length,
+                         expected_message.edit[1].to_length)
+        self.assertEqual(message.edit[1].sequence,
+                         expected_message.edit[1].sequence)
+        self.assertEqual(message.rank, expected_message.rank)
+        data = next(istream)
+        self.assertEqual(data, objects[2])
+        istream.close()
+
     def test_sync_integration(self):
         """Integration test for sync parsing/writing."""
         self.sync_integration_low()
+        self.sync_integration_byte()
+        self.sync_integration_byte(header=b'BYTES')
         for sample in TestStream.files:
             self.sync_integration_mid(sample, gzip=sample['gzip'],
                                       header=sample['header'])
