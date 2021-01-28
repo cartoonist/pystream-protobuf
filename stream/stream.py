@@ -271,7 +271,7 @@ class Stream(object):
             if val == self._header:
                 self._header = b''
                 return self._next()
-            raise RuntimeError(f"mismatch header (fetched {val})")
+            raise RuntimeError("mismatch header (fetched {v})".format(v=val))
         return val
 
     async def __anext__(self):
@@ -283,7 +283,7 @@ class Stream(object):
             if val == self._header:
                 self._header = b''
                 return await self._anext()
-            raise RuntimeError(f"mismatch header (fetched {val})")
+            raise RuntimeError("mismatch header (fetched {v})".format(v=val))
         return val
 
     def delimiter_class(self):
