@@ -8,8 +8,9 @@
 Python implementation of [stream library](https://github.com/vgteam/stream).
 
 ## Introduction
-This library enables _stream processing_ of protobuf messages; i.e. multiple
-protobuf messages can be written/read into/from a single stream or file.
+This library enables _stream processing_ of protobuf messages (or any serializable
+objects since v1.6.3); i.e. multiple protobuf messages can be written/read into/from a
+single stream or file.
 
 It was originally developed to parse/write [vg](https://github.com/vgteam/vg)
 file formats (`.vg`, `.gam`, etc). However, it can be used for any arbitrary
@@ -21,11 +22,13 @@ details.
 ---
 **NOTE**
 
-**@vg users:** The new version of stream library by
-[libvgio](https://github.com/vgteam/libvgio) writes a header at the start of the stream
-depending on the output format. For example, headers like `b'GAM'` or `b'VG'` can be
-found before the actual protobuf messages. In this case, you can provide the expected
-value using `header` keyword argument; e.g. `stream.parse('file.gam', header=b'GAM')`
+**@vg users:** The new version of stream library, now as a part of
+[libvgio](https://github.com/vgteam/libvgio), writes a header at the start of
+the stream depending on the output format. For example, headers like `b'GAM'`
+or `b'VG'` can be found before the actual protobuf messages in GAM and VG files
+repectively. In this case, you should provide the expected value using `header`
+keyword argument; e.g.
+`stream.parse('file.gam', vg_pb2.Alignment, header=b'GAM')`
 for GAM files (since version v1.6.2).
 
 ---
