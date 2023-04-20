@@ -136,6 +136,8 @@ class Stream(object):
             gzip (bool): Whether or not to use gzip compression on the given
                 file. (default is True)
             header (bytes): the header which is expected to read or write.
+            persistent_header (bool): whether headers occur before any data
+                blob. (default is False)
             serialize (function): serialising an input object to byte string.
                 If `None`, input objects are assumed to be protobuf messages.
         """
@@ -150,6 +152,7 @@ class Stream(object):
         else:
             self._fd = fileobj
         self._header = kwargs.pop('header', b'')
+        self._pers_header = kwargs.pop('persistent_header', False)
         if not mode.startswith('r'):
             self._buffer_size = kwargs.pop('buffer_size', 0)
             self._serialize = kwargs.pop('serialize', self.serialize_to_string)
@@ -269,7 +272,8 @@ class Stream(object):
         val = self._next()
         if self._header:
             if val == self._header:
-                self._header = b''
+                if not self._pers_header:
+                    self._header = b''
                 return self._next()
             raise RuntimeError("mismatch header (fetched {v})".format(v=val))
         return val
@@ -281,7 +285,8 @@ class Stream(object):
         val = await self._anext()
         if self._header:
             if val == self._header:
-                self._header = b''
+                if not self._pers_header:
+                    self._header = b''
                 return await self._anext()
             raise RuntimeError("mismatch header (fetched {v})".format(v=val))
         return val
@@ -349,7 +354,8 @@ class Stream(object):
         assert self._header
         encodeVarint(self._fd.write, len(self._header), True)
         self._fd.write(self._header)
-        self._header = b''
+        if not self._pers_header:
+            self._header = b''
 
     def flush(self):
         """Write down buffer to the file."""

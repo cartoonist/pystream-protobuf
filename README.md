@@ -20,15 +20,16 @@ Refer to the C++ [stream library](https://github.com/vgteam/stream) for more
 details.
 
 ---
+
 **NOTE**
 
 **@vg users:** The new version of stream library, now as a part of
-[libvgio](https://github.com/vgteam/libvgio), writes a header at the start of
+[libvgio](https://github.com/vgteam/libvgio), writes a header tag at the start of
 the stream depending on the output format. For example, headers like `b'GAM'`
 or `b'VG'` can be found before the actual protobuf messages in GAM and VG files
 repectively. In this case, you should provide the expected value using `header`
 keyword argument; e.g.
-`stream.parse('file.gam', vg_pb2.Alignment, header=b'GAM')`
+`stream.parse('file.gam', vg_pb2.Alignment, header=b'GAM', persistent_header=True)`
 for GAM files (since version v1.6.2).
 
 ---
